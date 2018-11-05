@@ -123,7 +123,7 @@ void svp_truncate(svp_file *fp) {
 
 uint8_t svp_rename(uint8_t *source, uint8_t *dest) {
 	FRESULT res;
-	res = f_rename(source, dest);
+	res = f_rename((char *)source,(char *) dest);
 	if (res) {
 		return 0;
 	} else {
@@ -171,8 +171,8 @@ uint8_t svp_extFindNext(uint8_t *outStr, uint16_t len) {
 	  res = f_readdir(&dir, &fno);
       //printf("dir: %d\n", fno.fname);
       if((res==FR_OK)&&(fno.fname[0] != 0)) {
-        if(svp_strcmp_ext(fno.fname, exten)) {
-          sda_strcp(fno.fname, outStr, len);
+        if(svp_strcmp_ext((uint8_t *)fno.fname, exten)) {
+          sda_strcp((uint8_t *)fno.fname, outStr, len);
           return 1;
         } else {
           continue;
@@ -188,7 +188,7 @@ uint8_t svp_extFindNext(uint8_t *outStr, uint16_t len) {
 
 uint8_t svp_extFind(uint8_t *outStr, uint16_t len, uint8_t *extension, uint8_t *directory){
   sda_strcp(extension, exten, 7);
-  res = f_opendir(&dir, directory);
+  res = f_opendir(&dir, (char *)directory);
   if (res == FR_OK){
   	return svp_extFindNext(outStr, len);
   }
@@ -196,7 +196,7 @@ uint8_t svp_extFind(uint8_t *outStr, uint16_t len, uint8_t *extension, uint8_t *
 }
 
 uint8_t svp_open_dir(svp_dir *dp, uint8_t *path) {
-  dp->res = f_opendir(&(dp->dir), path);
+  dp->res = f_opendir(&(dp->dir), (char *)path);
   if (dp->res == FR_OK) {
 	  return 0;
   } else {
@@ -241,17 +241,17 @@ uint16_t svp_strlen(uint8_t *str) {
 }
 
 uint8_t svp_chdir(uint8_t* path) {
-  f_chdir(path);
+  f_chdir((char *)path);
   return 0;
 }
 
 uint8_t svp_getcwd(uint8_t* buf, uint16_t len) {
-  f_getcwd(buf, len);
+  f_getcwd((char *)buf, len);
   return 0;
 }
 
 uint8_t svp_unlink(uint8_t* path) {
-  f_unlink (path);
+  f_unlink ((char *)path);
   return 0;
 }
 
@@ -259,7 +259,7 @@ uint8_t svp_is_dir(uint8_t* path) {
   FRESULT fr;
   FILINFO fno;
 
-  fr = f_stat(path, &fno);
+  fr = f_stat((char *)path, &fno);
 
   if (fr != FR_OK) {
   	printf("Error: svp_is_dir: no such file?\n");
@@ -276,7 +276,7 @@ uint8_t svp_is_dir(uint8_t* path) {
 
 uint8_t svp_mkdir(uint8_t* path) {
 	FRESULT res;
-	res = f_mkdir(path);
+	res = f_mkdir((char *)path);
 	if (res) {
 		return 0;
 	} else {
