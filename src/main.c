@@ -55,7 +55,7 @@ volatile uint8_t cpuClkLowFlag;
 volatile float ADC_Measurement_const;
 
 void SystemClock_Config(void);
-
+void __initialize_hardware(void);
 /*============================Local headers==================================*/
 void Delay(__IO uint32_t nCount);
 void beep_timer_init();
@@ -328,6 +328,7 @@ void EXTI0_IRQHandler(void) {
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	(void) (GPIO_Pin);
 	if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0) {
 		svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
 	}

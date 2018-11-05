@@ -48,6 +48,7 @@ typedef struct {
 extern touchCalibDataStruct touchCalibData;
 
 void touchInit(); // inits touch adcs, inits default calibration values
+void touchAdcInitExt(void);
 
 void touchWake();
 void touchSleep();
