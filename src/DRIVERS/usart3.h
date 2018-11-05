@@ -3,12 +3,13 @@
 
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
+#include "../sda_platform.h"
 
 extern void Error_Handler(void);
 
 void MX_USART3_UART_Init(void);
 void MX_USART3_UART_DeInit(void);
+void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle);
 void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle);
 
 uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout);

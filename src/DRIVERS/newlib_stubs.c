@@ -209,7 +209,7 @@ int _write(int file, char *ptr, int len) {
 
     switch (file) {
     case STDOUT_FILENO: /*stdout*/
-        HAL_UART_Transmit(&huart2, ptr, len, 100);
+        HAL_UART_Transmit(&huart2, (uint8_t*)ptr, len, 100);
         break;
     case STDERR_FILENO: /* stderr */
         break;

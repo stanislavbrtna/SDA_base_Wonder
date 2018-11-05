@@ -144,7 +144,7 @@ void RTC_WKUP_IRQHandler(void) {
 
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
 	// woke
-	//printf("woke form sleep!\n");
+	(void)(hrtc);
 	HAL_RTCEx_DeactivateWakeUpTimer(&RtcHandle);
 }
 

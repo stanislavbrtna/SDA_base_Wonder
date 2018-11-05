@@ -1,5 +1,3 @@
-//
-
 // ----------------------------------------------------------------------------
 #include "sda_platform.h"
 #include "math.h"
@@ -8,13 +6,13 @@
 #define MAX_VOLTAGE 4.0
 #define BATT_ADC_CONST_DEF 0.0013657;
 
+
 // hal handles
 ADC_HandleTypeDef g_AdcHandle;
 ADC_HandleTypeDef g_AdcHandle2;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 extern RNG_HandleTypeDef rng;
-extern TIM_HandleTypeDef beeptimer;
 /*============================globals========================================*/
 
 FATFS FatFs;
@@ -43,7 +41,6 @@ volatile uint8_t sdaDbgSerialEnabled;
 
 
 extern uint8_t beep_flag;
-extern uint16_t beep_t;
 // led pattern array
 uint8_t led_pattern[10];
 uint16_t led_counter;
@@ -54,6 +51,11 @@ volatile uint32_t batt_val;
 float batt_adc_const;
 
 volatile uint8_t cpuClkLowFlag;
+
+volatile float ADC_Measurement_const;
+
+void SystemClock_Config(void);
+
 /*============================Local headers==================================*/
 void Delay(__IO uint32_t nCount);
 void beep_timer_init();
@@ -76,7 +78,7 @@ void sda_set_led(uint8_t set) {
 //TODO: fix expansion serial port
 
 uint8_t sda_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
-	uart3_recieve(str, len, timeout);
+	return uart3_recieve(str, len, timeout);
 }
 
 void sda_serial_transmit(uint8_t *str, uint32_t len) {
@@ -138,19 +140,19 @@ void svp_set_backlight(uint8_t val) {
 void led_set_pattern(ledPatternType pat) {
 	uint8_t x;
 	if (pat == LED_ON) {
-		for (x=0; x<10; x++) {
+		for (x = 0; x < 10; x++) {
 			led_pattern[x] = 1;
 		}
 	}
 
 	if (pat == LED_OFF) {
-		for (x=0; x<10; x++) {
+		for (x = 0; x < 10; x++) {
 			led_pattern[x] = 0;
 		}
 	}
 
 	if (pat == LED_BLINK) {
-		led_pattern[0] =1;
+		led_pattern[0] = 1;
 		led_pattern[1] = 1;
 		led_pattern[2] = 1;
 		led_pattern[3] = 1;
@@ -192,7 +194,6 @@ void led_set_pattern(ledPatternType pat) {
 }
 
 float get_batt_voltage() {
-	//printf("battval: %u\n", batt_val);
 	return (((float)batt_val) * batt_adc_const);
 }
 
@@ -254,7 +255,7 @@ void system_clock_set_low(void) {
 	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2); //max 144Mhz
 
 	MX_USART2_UART_Init();
-	timer_OC_update();
+	lcd_bl_timer_OC_update();
 
 	if (sda_serial_is_enabled()) {
 		sda_serial_disable();
@@ -275,7 +276,7 @@ void system_clock_set_normal(void){
 	SystemClock_Config();
 	SystemCoreClockUpdate();
 	MX_USART2_UART_Init();
-	timer_OC_update();
+	lcd_bl_timer_OC_update();
 
 	if (sda_serial_is_enabled()) {
 		sda_serial_disable();
@@ -285,7 +286,7 @@ void system_clock_set_normal(void){
 	cpuClkLowFlag = 0;
 }
 
-sda_sleep() {
+void sda_sleep() {
 	GPIO_InitTypeDef GPIO_InitStruct;
 	//printf("sda entering deep sleep\n");
 	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
@@ -343,33 +344,33 @@ void svs_hardErrHandler() {
 }
 
 void tick_update_buttons(uint8_t *btn) {
-	if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET){ // A
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET){ // A
 		btn[0] = 1;
 	} else {
 		btn[0] = 0;
 	}
-	if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_SET){ // Left
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_LEFT_PORT, SDA_BASE_BTN_LEFT_PIN) == GPIO_PIN_SET){ // Left
 		btn[1] = 1;
 	} else {
 		btn[1] = 0;
 	}
-	if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_SET){ // Up
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET){ // Up
 		btn[2] = 1;
 	} else {
 		btn[2] = 0;
 	}
-	if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4) == GPIO_PIN_SET){ // Down
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET){ // Down
 		btn[3] = 1;
 	} else {
 		btn[3] = 0;
 	}
 
-	if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_SET){ // Right
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_RIGHT_PORT, SDA_BASE_BTN_RIGHT_PIN) == GPIO_PIN_SET){ // Right
 		btn[4] = 1;
 	} else {
 		btn[4] = 0;
 	}
-	if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_SET){ // B
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET){ // B
 		btn[5] = 1;
 	} else {
 		btn[5] = 0;
@@ -435,7 +436,6 @@ void SysTick_Handler(void) {
 	static uint16_t led_cnt;
 	static uint16_t batt_cnt;
 
-	static uint16_t beep_cnt;
 	static uint8_t oldsec;
 
 	static uint8_t btn[6];
@@ -461,22 +461,7 @@ void SysTick_Handler(void) {
 		}
 	}
 
-	if (beep_flag == 1) {
-		beep_flag = 2;
-		sda_base_beep_start();
-
-		beep_cnt = beep_t;
-	}
-
-	if (beep_cnt > 0) {
-		beep_cnt--;
-	} else {
-		if (beep_flag == 2) {
-			beep_flag = 0;
-			HAL_TIM_Base_Stop_IT(&beeptimer);
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-		}
-	}
+	sda_base_spkr_irq_handler();
 
 	if (tickLock == 1) {
 		counter++;
@@ -489,6 +474,7 @@ void SysTick_Handler(void) {
 				system_clock_set_normal();
 				powerOnLck = 1;
 				svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
+				pwrLongPressCnt = 0;
 			}
 		}
 		// pwr long press detection
@@ -638,6 +624,8 @@ void SysTick_Handler(void) {
 int main() {
 	__initialize_hardware();
 
+	ADC_Measurement_const = BATT_ADC_CONST_DEF;
+
 	batt_adc_const = BATT_ADC_CONST_DEF;
 
 	tickLock = 0;
@@ -673,7 +661,7 @@ int main() {
 	LCD_setDrawArea(0,0,319,479);
 
 	// UP on both board revisions goes straight to calibration
-	if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_SET) {
+	if (HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET) {
 		printf("LCD Calibbration!\n");
 		sda_calibrate();
 		sda_setLcdCalibrationFlag(1);
@@ -691,7 +679,7 @@ int main() {
 		draw_ppm(0, 0, 1,(uint8_t *) "splash.ppm");
 		count = 25000000;
 			for(; count != 0; count--) {
-			if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_SET) {
+			if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
 				break;
 			}
 		}
@@ -700,7 +688,7 @@ int main() {
 		draw_ppm(0, 0, 2,(uint8_t *) "splash.ppm");
 		count = 25000000;
 		for(; count != 0; count--) {
-			if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_SET){
+			if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET){
 				break;
 			}
 		}

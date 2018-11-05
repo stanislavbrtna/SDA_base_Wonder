@@ -112,6 +112,10 @@ static void touchAdcInit(void) {
 	}
 }
 
+void touchAdcInitExt(void) {
+	touchAdcInit();
+}
+
 #ifdef TOUCH_USE_BATTERY_MEASUREMENT
 uint16_t getBatteryVoltage() {
 	ADC_ChannelConfTypeDef adcChannel;

@@ -85,20 +85,20 @@ void uart3_transmit(uint8_t *str, uint32_t len) {
 	HAL_UART_Transmit(&huart3, str, len, 1000);
 }
 
-HAL_StatusTypeDef HAL_UART_AbortReceive(UART_HandleTypeDef *huart);
+//HAL_StatusTypeDef HAL_UART_AbortReceive(UART_HandleTypeDef *huart);
 extern uint8_t tickLock;
 
 uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 	// todo: recieve api needs to be polling: something like recv(numOfBytes)
 	// if (gotThose) { s = getData}
 	static uint8_t buff[512];
-	uint32_t tickstart = 0;
+	//uint32_t tickstart = 0;
 	//printf("dbg: init?!\n");
 	if (!sdaSerialEnabled) {
 		sda_serial_enable();
 	}
 
-	tickstart = HAL_GetTick();
+	//tickstart = HAL_GetTick();
 
 	for(uint32_t i = 0; i < sizeof(buff); i++) {
 		buff[i] = 0;

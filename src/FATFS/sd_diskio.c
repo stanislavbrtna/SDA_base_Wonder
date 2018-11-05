@@ -141,6 +141,7 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
   * @retval DSTATUS: Operation status
   */
 DSTATUS disk_initialize(BYTE lun) {
+	(void)(lun);
   Stat = STA_NOINIT;
 
   if (sda_sdio_hw_init() == HAL_OK) {
@@ -160,6 +161,7 @@ DSTATUS disk_initialize(BYTE lun) {
   */
 DSTATUS disk_status(BYTE lun)
 {
+	(void)(lun);
   /*Stat = STA_NOINIT;
 
   if(HAL_SD_GetCardState(&mainSD) == HAL_SD_CARD_TRANSFER)
@@ -202,6 +204,7 @@ DRESULT disk_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 }*/
 DRESULT disk_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
+	(void)(lun);
     DRESULT  res;
     uint32_t timeout = 0;
     SD_setSpeedHi();
@@ -217,7 +220,7 @@ DRESULT disk_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
             {
                 return RES_OK;
             } else {
-            	//printf("loop fail?\n");
+            	printf ("read failed (%u) (sector: %u, count: %u)\n",(unsigned int)mainSD.ErrorCode, (unsigned int)sector, (unsigned int)count);
             }
         }
     }
@@ -236,14 +239,13 @@ DRESULT disk_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 
 DRESULT disk_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
+	(void)(lun);
   DRESULT res = RES_ERROR;
   uint32_t timeout = 0;
-  uint8_t ok = 0;
   SD_setSpeedHi();
-		if(HAL_SD_WriteBlocks(&mainSD, buff,
+		if(HAL_SD_WriteBlocks(&mainSD,(uint8_t *) buff,
         (uint32_t)(sector),
         count, 1000000) == HAL_OK) {
-			ok = 1;
 			res = RES_OK;
 
 			while(timeout++ != 10000000)
@@ -255,8 +257,7 @@ DRESULT disk_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 			            }
 			        }
 		} else {
-
-			printf ("write failed (%u) (sector: %u, count: %u)\n",mainSD.ErrorCode, sector, count);
+			printf ("write failed (%u) (sector: %u, count: %u)\n",(unsigned int)mainSD.ErrorCode, (unsigned int)sector, (unsigned int)count);
 		}
 
   return res;
@@ -273,6 +274,7 @@ DRESULT disk_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 
 DRESULT disk_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
+	(void)(lun);
   DRESULT res = RES_ERROR;
   HAL_SD_CardInfoTypeDef CardInfo;
   SD_setSpeedHi();

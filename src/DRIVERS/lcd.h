@@ -87,6 +87,7 @@ void lcd_hw_sleep();
 void lcd_hw_wake();
 void lcd_bl_on();
 void lcd_bl_off();
+void lcd_bl_timer_OC_update();
 
 void backlight_timer_init();
 void lcd_hw_set_backlight(uint8_t val0To255);

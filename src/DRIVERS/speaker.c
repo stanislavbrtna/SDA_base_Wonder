@@ -1,4 +1,4 @@
-#include "sda_platform.h"
+#include "speaker.h"
 
 TIM_HandleTypeDef beeptimer;
 
@@ -6,12 +6,9 @@ volatile uint8_t beep_flag;
 volatile uint16_t beep_t;
 volatile uint32_t beep_scaler;
 
-void sda_beep_setup(uint16_t freq);
 
-// beeper timer
 void beep_timer_init() {
 	__TIM3_CLK_ENABLE();
-	// (TIM_CLOCK / (Prescaler + 1)) / (Period +1)
 	beeptimer.Instance = TIM3;
 	beeptimer.Channel = HAL_TIM_ACTIVE_CHANNEL_4;
 	beeptimer.Init.Prescaler = 20;
@@ -53,7 +50,6 @@ void svp_beep_set_t(uint16_t time) {
 void svp_beep_set_pf(uint16_t val) {
 	beep_scaler = val;
 	TIM3->PSC = 1680000/val;
-	//sda_beep_setup(beep_scaler);
 }
 
 void svp_beep_set_def() {
@@ -64,14 +60,12 @@ void svp_beep_set_def() {
 void sda_beep_setup(uint16_t freq) {
 	__TIM3_CLK_ENABLE();
 	HAL_TIM_Base_DeInit(&beeptimer);
-	printf("clock: %u\n", SystemCoreClock);
-	// Prescaler = TIM_CLOCK / ( hz*(Period +1) )
-	beeptimer.Instance = TIM3;
-	beeptimer.Channel = HAL_TIM_ACTIVE_CHANNEL_4;
-	beeptimer.Init.Prescaler = 1680000/freq;
-	beeptimer.Init.CounterMode = TIM_COUNTERMODE_UP;
-	beeptimer.Init.Period = 200;
-	beeptimer.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	beeptimer.Instance               = TIM3;
+	beeptimer.Channel                = HAL_TIM_ACTIVE_CHANNEL_4;
+	beeptimer.Init.Prescaler         = 1680000 / freq;
+	beeptimer.Init.CounterMode       = TIM_COUNTERMODE_UP;
+	beeptimer.Init.Period            = 200;
+	beeptimer.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	beeptimer.Init.RepetitionCounter = 0;
 
 	if(HAL_TIM_Base_Init(&beeptimer) != HAL_OK) {
@@ -91,3 +85,27 @@ void sda_base_beep_start() {
 	HAL_TIM_Base_Start_IT(&beeptimer);
 }
 
+// runs in systick about every ms, starts and stops the beeps
+void sda_base_spkr_irq_handler() {
+	static uint16_t beep_cnt;
+
+	if (beep_flag == 1) {
+		beep_flag = 2;
+		sda_base_beep_start();
+		beep_cnt = beep_t;
+	}
+
+	if (beep_cnt > 0) {
+		beep_cnt--;
+	} else {
+		if (beep_flag == 2) {
+			beep_flag = 0;
+			HAL_TIM_Base_Stop_IT(&beeptimer);
+			HAL_GPIO_WritePin(
+					SDA_BASE_SPEAKER_PORT,
+					SDA_BASE_SPEAKER_PIN,
+					GPIO_PIN_RESET
+					);
+		}
+	}
+}

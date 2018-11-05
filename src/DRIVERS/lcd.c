@@ -54,6 +54,8 @@ void writeRegister16(uint8_t x, uint16_t data);
 static void lcd_send_data(uint8_t data);
 static void lcd_send_cmd(uint8_t data);
 
+void lcd_send_cmd_d(uint8_t data); // send with delay
+
 /*
  * for GR2:
  *
@@ -125,7 +127,6 @@ void lcd_hw_set_backlight(uint8_t val) {
 void backlight_timer_init() {
 	LCD_TIM_CLK_ENABLE;
 	lcd_bl_on();
-	TIM_MasterConfigTypeDef sMasterConfig;
 	TIM_OC_InitTypeDef sConfigOC;
 
 	blTimer.Instance         = LCD_BL_TIMER;
@@ -165,7 +166,7 @@ void backlight_timer_init() {
 	}
 }
 
-void timer_OC_update() {
+void lcd_bl_timer_OC_update() {
 	HAL_TIM_PWM_Stop(&blTimer, LCD_BL_CHANNEL);
 	HAL_TIM_PWM_DeInit(&blTimer);
 	// stop generation of pwm
@@ -196,7 +197,6 @@ static void setBacklight(TIM_HandleTypeDef timer, uint32_t channel, uint16_t pul
 	if (HAL_TIM_PWM_Start(&timer, channel) != HAL_OK) {
 		printf("HAL: TIM2 setPWM error (2)!\n");
 	}
-
 }
 
 static void lcd_Delay(__IO uint32_t nCount) {
@@ -254,292 +254,31 @@ void lcd_Init_Seq_9488(){
 		lcd_send_data(0x1E);
 		lcd_send_data(0x0F);
 
-		/* old conf
-		 * lcd_send_data(0x0F);
-		lcd_send_data(0x1F);
-		lcd_send_data(0x1C);
-		lcd_send_data(0x0C);
-		lcd_send_data(0x0F);
-		lcd_send_data(0x08);
-		lcd_send_data(0x48);
-		lcd_send_data(0x98);
-		lcd_send_data(0x37);
-		lcd_send_data(0x0A);
-		lcd_send_data(0x13);
+	lcd_send_cmd_d(0xE1);
+		lcd_send_data(0x00);
+		lcd_send_data(0x20);
+		lcd_send_data(0x23);
 		lcd_send_data(0x04);
-		lcd_send_data(0x11);
-		lcd_send_data(0x0D);
-		lcd_send_data(0x00);*/
+		lcd_send_data(0x10);
+		lcd_send_data(0x06);
+		lcd_send_data(0x37);
+		lcd_send_data(0x56);
+		lcd_send_data(0x49);
+		lcd_send_data(0x04);
+		lcd_send_data(0x0C);
+		lcd_send_data(0x0A);
+		lcd_send_data(0x33);
+		lcd_send_data(0x37);
+		lcd_send_data(0x0F);
 
-		lcd_send_cmd_d(0xE1);
-			lcd_send_data(0x00);
-			lcd_send_data(0x20);
-			lcd_send_data(0x23);
-			lcd_send_data(0x04);
-			lcd_send_data(0x10);
-			lcd_send_data(0x06);
-			lcd_send_data(0x37);
-			lcd_send_data(0x56);
-			lcd_send_data(0x49);
-			lcd_send_data(0x04);
-			lcd_send_data(0x0C);
-			lcd_send_data(0x0A);
-			lcd_send_data(0x33);
-			lcd_send_data(0x37);
-			lcd_send_data(0x0F);
+	lcd_send_cmd_d(0x36);
+		lcd_send_data(0x48);
 
-			/*lcd_send_data(0x0F);
-			lcd_send_data(0x32);
-			lcd_send_data(0x2E);
-			lcd_send_data(0x0B);
-			lcd_send_data(0x0D);
-			lcd_send_data(0x05);
-			lcd_send_data(0x47);
-			lcd_send_data(0x75);
-			lcd_send_data(0x37);
-			lcd_send_data(0x06);
-			lcd_send_data(0x10);
-			lcd_send_data(0x03);
-			lcd_send_data(0x24);
-			lcd_send_data(0x20);
-			lcd_send_data(0x00);*/
+	lcd_send_cmd_d(0x11);                     // sleep out
+		lcd_Delay(150);
 
-		/*lcd_send_cmd(0xE2);
-			lcd_send_data(0x0F);
-			lcd_send_data(0x32);
-			lcd_send_data(0x2E);
-			lcd_send_data(0x0B);
-			lcd_send_data(0x0D);
-			lcd_send_data(0x05);
-			lcd_send_data(0x47);
-			lcd_send_data(0x75);
-			lcd_send_data(0x37);
-			lcd_send_data(0x06);
-			lcd_send_data(0x10);
-			lcd_send_data(0x03);
-			lcd_send_data(0x24);
-			lcd_send_data(0x20);
-			lcd_send_data(0x00);
-*/
-		lcd_send_cmd_d(0x36);
-			lcd_send_data(0x48);
-
-		lcd_send_cmd_d(0x11);                     // sleep out
-			lcd_Delay(150);
-
-			lcd_send_cmd_d(0x29);                     // display on
-			lcd_Delay(150);
-
-	/*
-
-	lcd_send_cmd(0xF1);
-	    lcd_send_data(0x36);
-	    lcd_send_data(0x04);
-	    lcd_send_data(0x00);
-	    lcd_send_data(0x3C);
-	    lcd_send_data(0x0F);
-	    lcd_send_data(0x8F);
-
-
-	    lcd_send_cmd(0xF2);
-	    lcd_send_data(0x18);
-	    lcd_send_data(0xA3);
-	    lcd_send_data(0x12);
-	    lcd_send_data(0x02);
-	    lcd_send_data(0xb2);
-	    lcd_send_data(0x12);
-	    lcd_send_data(0xFF);
-	    lcd_send_data(0x10);
-	    lcd_send_data(0x00);
-
-	    lcd_send_cmd(0xF8);
-	    lcd_send_data(0x21);
-	    lcd_send_data(0x04);
-
-	    lcd_send_cmd(0xF9);
-	    lcd_send_data(0x00);
-	    lcd_send_data(0x08);
-
-	    lcd_send_cmd(0xC0);
-	    lcd_send_data(0x0f); //13
-	    lcd_send_data(0x0f); //10
-
-	    lcd_send_cmd(0xC1);
-	    lcd_send_data(0x42); //43
-
-
-
-	    lcd_send_cmd(0xC5);
-	    lcd_send_data(0x01); //00
-	    lcd_send_data(0x29); //4D
-	    lcd_send_data(0x80);
-
-	    lcd_send_cmd(0xB6);
-	    lcd_send_data(0x00);
-	    lcd_send_data(0x02); //42
-	    lcd_send_data(0x3b);
-
-	    lcd_send_cmd(0xB1);
-	    lcd_send_data(0xB0); //C0
-	    lcd_send_data(0x11);
-
-	    lcd_send_cmd(0xB4);
-	    lcd_send_data(0x02); //01
-
-	    lcd_send_cmd(0xE0);
-	    lcd_send_data(0x0F);
-	    lcd_send_data(0x18);
-	    lcd_send_data(0x15);
-	    lcd_send_data(0x09);
-	    lcd_send_data(0x0B);
-	    lcd_send_data(0x04);
-	    lcd_send_data(0x49);
-	    lcd_send_data(0x64);
-	    lcd_send_data(0x3D);
-	    lcd_send_data(0x08);
-	    lcd_send_data(0x15);
-	    lcd_send_data(0x06);
-	    lcd_send_data(0x12);
-	    lcd_send_data(0x07);
-	    lcd_send_data(0x00);
-
-	    lcd_send_cmd(0xE1);
-	    lcd_send_data(0x0F);
-	    lcd_send_data(0x38);
-	    lcd_send_data(0x35);
-	    lcd_send_data(0x0a);
-	    lcd_send_data(0x0c);
-	    lcd_send_data(0x03);
-	    lcd_send_data(0x4A);
-	    lcd_send_data(0x42);
-	    lcd_send_data(0x36);
-	    lcd_send_data(0x04);
-	    lcd_send_data(0x0F);
-	    lcd_send_data(0x03);
-	    lcd_send_data(0x1F);
-	    lcd_send_data(0x1B);
-	    lcd_send_data(0x00);
-
-	    lcd_send_cmd(0x20);                     // display inversion OFF
-
-	    lcd_send_cmd(0x36);      // MEMORY_ACCESS_CONTROL (orientation stuff)
-	    lcd_send_data(0x48);
-
-	    lcd_send_cmd(0x3A);      // COLMOD_PIXEL_FORMAT_SET
-	    lcd_send_data(0x55);     // 16 bit pixel
-
-	    lcd_send_cmd(0x13); // Nomal Displaymode
-
-	    lcd_send_cmd(0x11);                     // sleep out
-	    lcd_Delay(150);
-
-	    lcd_send_cmd(0x29);                     // display on
-	    lcd_Delay(150);
-
-	    testcode no1:
-
-		LCD_Write_COM(0xF2);		// ?????
-		LCD_Write_DATA(0x1C);
-		LCD_Write_DATA(0xA3);
-		LCD_Write_DATA(0x32);
-		LCD_Write_DATA(0x02);
-		LCD_Write_DATA(0xb2);
-		LCD_Write_DATA(0x12);
-		LCD_Write_DATA(0xFF);
-		LCD_Write_DATA(0x12);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xF1);		// ?????
-		LCD_Write_DATA(0x36);
-		LCD_Write_DATA(0xA4);
-
-		LCD_Write_COM(0xF8);		// ?????
-		LCD_Write_DATA(0x21);
-		LCD_Write_DATA(0x04);
-
-		LCD_Write_COM(0xF9);		// ?????
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x08);
-
-		LCD_Write_COM(0xC0);		// Power Control 1
-		LCD_Write_DATA(0x0d);
-		LCD_Write_DATA(0x0d);
-
-		LCD_Write_COM(0xC1);		// Power Control 2
-		LCD_Write_DATA(0x43);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xC2);		// Power Control 3
-		LCD_Write_DATA(0x44);
-
-		LCD_Write_COM(0xC5);		// VCOM Control
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x48);
-
-		LCD_Write_COM(0xB6);		// Display Function Control
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x22);		// 0x42 = Rotate display 180 deg.
-		LCD_Write_DATA(0x3B);
-
-		LCD_Write_COM(0xE0);		// PGAMCTRL (Positive Gamma Control)
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x24);
-		LCD_Write_DATA(0x1c);
-		LCD_Write_DATA(0x0a);
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x08);
-		LCD_Write_DATA(0x43);
-		LCD_Write_DATA(0x88);
-		LCD_Write_DATA(0x32);
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x10);
-		LCD_Write_DATA(0x06);
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x07);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0xE1);		// NGAMCTRL (Negative Gamma Control)
-		LCD_Write_DATA(0x0F);
-		LCD_Write_DATA(0x38);
-		LCD_Write_DATA(0x30);
-		LCD_Write_DATA(0x09);
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x0f);
-		LCD_Write_DATA(0x4e);
-		LCD_Write_DATA(0x77);
-		LCD_Write_DATA(0x3c);
-		LCD_Write_DATA(0x07);
-		LCD_Write_DATA(0x10);
-		LCD_Write_DATA(0x05);
-		LCD_Write_DATA(0x23);
-		LCD_Write_DATA(0x1b);
-		LCD_Write_DATA(0x00);
-
-		LCD_Write_COM(0x20);		// Display Inversion OFF
-		LCD_Write_DATA(0x00);//C8
-
-		LCD_Write_COM(0x36);		// Memory Access Control
-		LCD_Write_DATA(0x0A);
-
-		LCD_Write_COM(0x3A);		// Interface Pixel Format
-		LCD_Write_DATA(0x55);   // 16bpp
-
-		LCD_Write_COM(0x2A);		// Column Addess Set
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0xDF);
-
-		LCD_Write_COM(0x002B);		// Page Address Set
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x00);
-		LCD_Write_DATA(0x01);
-		LCD_Write_DATA(0x3f);
-		lcd_Delay(50);
-		LCD_Write_COM(0x0029);		// Display ON
-		LCD_Write_COM(0x11);		// Sleep OUT
-		//LCD_Write_COM(0x002C);		// Memory Write
-		*/
+		lcd_send_cmd_d(0x29);                     // display on
+		lcd_Delay(150);
 }
 
 // ILI9481
