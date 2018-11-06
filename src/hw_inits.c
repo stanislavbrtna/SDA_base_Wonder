@@ -90,18 +90,15 @@ static void sda_internal_pin_def_hw(GPIO_TypeDef *port, uint32_t pin, uint8_t pi
 	}
 
 	if (pinType == SDA_BASE_PIN_ALT) {
-		if ((pin != 8 || pin != 8) && (port != GPIOD)){
+		if ((pin != 8 || pin != 8) && (port != GPIOD) && (pin != 10 || pin != 11) && (port != GPIOB)) {
 			printf("alternate init error\n");
 			return;
 		}
-		if ((pin != 10 || pin != 11) && (port != GPIOB)){
-			printf("alternate init error\n");
+		if ((pin == 1) && (port == GPIOA)) {
+			// adc is inited every time before the conversion
 			return;
 		}
-		if ((pin != 1) && (port != GPIOA)){
-			// we will init the pin
-			return;
-		}
+
 		GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
 		GPIO_InitStructure.Pull = GPIO_PULLUP;
 		GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
