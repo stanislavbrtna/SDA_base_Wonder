@@ -287,21 +287,7 @@ void system_clock_set_normal(void){
 }
 
 void sda_sleep() {
-	GPIO_InitTypeDef GPIO_InitStruct;
-	//printf("sda entering deep sleep\n");
-	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
-	GPIO_InitStruct.Pin = GPIO_PIN_0;
-	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/* Enable and set Button EXTI Interrupt to the lowest priority */
-	HAL_NVIC_SetPriority(EXTI0_IRQn, 0x0F, 0);
-	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
-	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
-	HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1);
 	// set up the RTC alarm and pwr button wakeup
 
 	tickLock = 0;

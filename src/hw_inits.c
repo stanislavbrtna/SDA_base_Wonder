@@ -38,6 +38,24 @@ static void platform_gpio_in(GPIO_TypeDef *port, uint32_t pin) {
 	HAL_GPIO_Init(port, &GPIO_InitStructure);
 }
 
+void pwr_btn_gpio_init() {
+	GPIO_InitTypeDef GPIO_InitStruct;
+	//printf("sda entering deep sleep\n");
+	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
+	GPIO_InitStruct.Pin = GPIO_PIN_0;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/* Enable and set Button EXTI Interrupt to the lowest priority */
+	HAL_NVIC_SetPriority(EXTI0_IRQn, 0x0F, 0);
+	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+	HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1);
+}
+
 void sda_platform_gpio_init() {
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -53,6 +71,7 @@ void sda_platform_gpio_init() {
 
 	//PA0 in - sw-on
 	platform_gpio_in(GPIOA, GPIO_PIN_0);
+	pwr_btn_gpio_init();
 
 	// btn A, B, left, right, down, up
 	platform_gpio_in(GPIOE, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5);
