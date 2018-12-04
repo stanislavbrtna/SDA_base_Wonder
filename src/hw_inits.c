@@ -2,6 +2,8 @@
 
 RNG_HandleTypeDef rng;
 
+extern volatile wonderBoardRevisions boardRev;
+
 void rrand_init() {
 	__HAL_RCC_RNG_CLK_ENABLE ();
 	rng.Instance = RNG;
@@ -62,6 +64,14 @@ void sda_platform_gpio_init() {
 	__HAL_RCC_GPIOD_CLK_ENABLE();
 	__HAL_RCC_GPIOE_CLK_ENABLE();
 
+	//Board revision detection
+	platform_gpio_in(GPIOB, GPIO_PIN_6); // sets pulldown
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_SET) {
+		boardRev = REV2B;
+	} else {
+		boardRev = REV1;
+	}
+
 	//ledpin
 	platform_gpio_out(GPIOB, GPIO_PIN_2);
 	sda_set_led(1);
@@ -76,15 +86,19 @@ void sda_platform_gpio_init() {
 	// btn A, B, left, right, down, up
 	platform_gpio_in(GPIOE, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5);
 
-	//PB1 - USB PowerDetect
-	platform_gpio_in(GPIOB, GPIO_PIN_1);
+	//USB PowerDetect, revision dependent
+	if (boardRev == REV1) {
+		platform_gpio_in(GPIOB, GPIO_PIN_1);
+	} else if (boardRev == REV2B) {
+		platform_gpio_in(GPIOE, GPIO_PIN_7);
+	}
 
 	// unused pins are set as AIN to save power
 	platform_gpio_ain(GPIOD, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4);
 	// internal expansion is not used by default
 	platform_gpio_ain(GPIOD, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
 
-	platform_gpio_ain(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14);
+	platform_gpio_ain(GPIOE, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14);
 
 	platform_gpio_ain(GPIOB, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
 

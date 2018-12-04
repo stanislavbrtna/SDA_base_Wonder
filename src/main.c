@@ -2,9 +2,10 @@
 #include "sda_platform.h"
 #include "math.h"
 
-#define MIN_VOLTAGE 3.0
+#define MIN_VOLTAGE 3.1
 #define MAX_VOLTAGE 4.0
-#define BATT_ADC_CONST_DEF 0.0013657;
+#define BATT_ADC_CONST_DEF 0.0013657
+#define VOLTAGE_REF_VAL_DEF 0.626
 
 
 // hal handles
@@ -17,6 +18,8 @@ extern RNG_HandleTypeDef rng;
 
 FATFS FatFs;
 svpStatusStruct svpSGlobal;
+
+volatile wonderBoardRevisions boardRev;
 
 uint32_t uptimeSleepStart;
 
@@ -48,6 +51,7 @@ uint16_t led_counter;
 // battery measurement
 uint16_t batt_array[60];
 volatile uint32_t batt_val;
+volatile uint32_t voltage_ref_val;
 float batt_adc_const;
 
 volatile uint8_t cpuClkLowFlag;
@@ -194,7 +198,14 @@ void led_set_pattern(ledPatternType pat) {
 }
 
 float get_batt_voltage() {
-	return (((float)batt_val) * batt_adc_const);
+	// get current conversion constant
+	if (boardRev == REV2B) {
+		batt_adc_const = (VOLTAGE_REF_VAL_DEF) / (float)voltage_ref_val;
+		//printf("measuring: ref: %u, const: %u, voltage:%u\n", voltage_ref_val, (uint32_t)(batt_adc_const*100000), (uint32_t) ((float)batt_val * batt_adc_const * 100.0));
+		return ( (((float)batt_val) * batt_adc_const) / 0.6); //1.666 is a const of the battery voltage divider
+	} else if (boardRev == REV1) {
+		return (((float)batt_val) * batt_adc_const);
+	}
 }
 
 uint8_t get_batt_percent() {
@@ -365,10 +376,18 @@ void tick_update_buttons(uint8_t *btn) {
 }
 
 void update_power_status() {
-	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_SET) {
-		svpSGlobal.pwrType = POWER_USB;
+	if (boardRev == REV1) {
+		if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_SET) {
+			svpSGlobal.pwrType = POWER_USB;
+		} else {
+			svpSGlobal.pwrType = POWER_BATT;
+		}
 	} else {
-		svpSGlobal.pwrType = POWER_BATT;
+		if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_7) == GPIO_PIN_SET) {
+			svpSGlobal.pwrType = POWER_USB;
+		} else {
+			svpSGlobal.pwrType = POWER_BATT;
+		}
 	}
 }
 
@@ -570,7 +589,7 @@ void SysTick_Handler(void) {
 					for(i = 0; i < 59; i++) {
 						temp += batt_array[i];
 					}
-
+					voltage_ref_val = getRefVoltage();
 					batt_val = temp / 60 + temp % 60;
 
 					temp = (uint32_t)(get_batt_voltage() * 10);
@@ -610,6 +629,8 @@ void SysTick_Handler(void) {
 
 int main() {
 	__initialize_hardware();
+
+	boardRev = UNKNOWN;
 
 	ADC_Measurement_const = BATT_ADC_CONST_DEF;
 

@@ -63,6 +63,7 @@ void sda_calibrate();
 
 #ifdef TOUCH_USE_BATTERY_MEASUREMENT
 uint16_t getBatteryVoltage();
+uint16_t getRefVoltage();
 #endif
 
 #endif /* TOUCH_TOUCH_H_ */

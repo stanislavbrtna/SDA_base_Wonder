@@ -33,6 +33,8 @@
 #define SDA_BASE_PIN_PULLDOWN 1
 #define SDA_BASE_PIN_PULLUP 1
 
+typedef enum {UNKNOWN, REV1, REV2B} wonderBoardRevisions;
+
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_cortex.h"

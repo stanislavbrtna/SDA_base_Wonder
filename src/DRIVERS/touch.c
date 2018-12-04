@@ -185,6 +185,76 @@ uint16_t getBatteryVoltage() {
 
 	return measuredVoltage;
 }
+
+uint16_t getRefVoltage() {
+	ADC_ChannelConfTypeDef adcChannel;
+	GPIO_InitTypeDef gpioInit;
+	__GPIOB_CLK_ENABLE();
+	__GPIOA_CLK_ENABLE();
+	__ADC1_CLK_ENABLE();
+	__ADC2_CLK_ENABLE();
+
+	// Deinit the ADCs, init battery measurement setup,
+	// measure, then init everything back
+	g_AdcHandle2.Instance = ADC2;
+	HAL_ADC_DeInit(&g_AdcHandle2);
+	uint16_t measuredVoltage = 0;
+
+	g_AdcHandle2.Instance                   = ADC2;
+	g_AdcHandle2.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV2;
+	g_AdcHandle2.Init.Resolution            = ADC_RESOLUTION_12B;
+	g_AdcHandle2.Init.ScanConvMode          = ENABLE;
+	g_AdcHandle2.Init.ContinuousConvMode    = ENABLE;
+	g_AdcHandle2.Init.DiscontinuousConvMode = DISABLE;
+	g_AdcHandle2.Init.NbrOfDiscConversion   = 0;
+	g_AdcHandle2.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
+	g_AdcHandle2.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+	g_AdcHandle2.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+	g_AdcHandle2.Init.NbrOfConversion       = 1;
+	g_AdcHandle2.Init.DMAContinuousRequests = ENABLE;
+	g_AdcHandle2.Init.EOCSelection          = DISABLE;
+
+	//ADC2 in 8 - batt
+	adcChannel.Channel = ADC_CHANNEL_9;
+	adcChannel.Rank    = 1;
+	adcChannel.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+	adcChannel.Offset = 0;
+
+	if(HAL_ADC_Init(&g_AdcHandle2) != HAL_OK) {
+		printf("batt_dbg: hal init FAIL\n");
+	}
+
+	if (HAL_ADC_ConfigChannel(&g_AdcHandle2, &adcChannel) != HAL_OK) {
+		printf("batt_dbg: hal channel 7 init FAIL\n");
+	}
+
+	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_6);
+	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_7);
+
+	//PB0 ain - battery
+	HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1);
+	gpioInit.Pin   = GPIO_PIN_1;
+	gpioInit.Mode  = GPIO_MODE_ANALOG;
+	gpioInit.Pull  = GPIO_NOPULL;
+	gpioInit.Speed = GPIO_SPEED_HIGH;
+	HAL_GPIO_Init(GPIOB, &gpioInit);
+
+	HAL_ADC_Start(&g_AdcHandle2);
+	if (HAL_ADC_PollForConversion(&g_AdcHandle2, 1000000) == HAL_OK) {
+		measuredVoltage = HAL_ADC_GetValue(&g_AdcHandle2);
+	}
+	HAL_ADC_Stop(&g_AdcHandle2);
+
+	g_AdcHandle.Instance = ADC1;
+
+	HAL_ADC_DeInit(&g_AdcHandle);
+	HAL_ADC_DeInit(&g_AdcHandle2);
+
+	HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1);
+	touchAdcInit();
+
+	return measuredVoltage;
+}
 #endif
 
 void touchInit() {
@@ -290,11 +360,15 @@ uint8_t touch_read_xy(touchXY *result) {
 	return valid;
 }
 
+// Returns median of 30 subsequent touch screen readouts
 uint8_t touch_read_xy_m30(touchXY *result) {
 	touchXY prac;
 	uint16_t x[31];
 	uint16_t y[31];
 	uint16_t i, j, temp;
+
+	// median computation code was taken from from
+	// https://en.wikiversity.org/wiki/C_Source_Code/Find_the_median_and_mean
 
 	for (i = 0; i < 30; i++) {
 		x[i] = 0;
@@ -336,13 +410,16 @@ uint8_t touch_read_xy_m30(touchXY *result) {
 
 	result->x = x[15];
 	result->y = y[15];
-	// validation values were
+
+	// validation of values
 	if ((result->x < 3700)
 			&& (result->y < 4000)
 			&& (result->x > 350)
 			&& (result->y > 350)) {
+		// ok
 		return 1;
 	} else {
+		// read failed
 		return 0;
 	}
 }
@@ -422,6 +499,7 @@ void svp_set_calibration_data(touchCalibDataStruct input) {
 	touchCalibData.e = input.e;
 }
 
+// draw the calibration target
 void touch_draw_cpoint(uint16_t x, uint16_t y, uint16_t color) {
 	LCD_DrawLine(x, y - 5, x, y + 5, color);
 	LCD_DrawLine(x-  5, y, x + 5, y, color);
@@ -430,6 +508,7 @@ void touch_draw_cpoint(uint16_t x, uint16_t y, uint16_t color) {
 
 #define CPOINT1_Y 80
 
+// Calibration routine
 void sda_calibrate () {
 	touchXY res;
 	float rx1, ry1, rx2, ry2;
@@ -504,9 +583,24 @@ void sda_calibrate () {
 		touchCalibData.e = e;
 
 		LCD_Fill(0x0000);
+#ifndef LANG_VAL
 		LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Test Kalibrace");
 		LCD_DrawText_ext(10, 420, 0xFFFF, (uint8_t *)"Rekalibrovat");
 		LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
+#else
+#if LANG_VAL==0
+		LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Test Kalibrace\n(Použijte tlačítka k potvrzení)");
+		LCD_DrawText_ext(10, 420, 0xFFFF, (uint8_t *)"Rekalibrovat");
+		LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
+#endif
+
+#if LANG_VAL==1
+		LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Calibration test\n(use buttons to select option)");
+		LCD_DrawText_ext(10, 420, 0xFFFF, (uint8_t *)"Calibrate again");
+		LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
+#endif
+
+#endif
 
 		while (1) {
 			if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET) {
