@@ -48,11 +48,14 @@ extern uint8_t beep_flag;
 uint8_t led_pattern[10];
 uint16_t led_counter;
 
+volatile uint8_t sdaWakeupFlag;
+
 // battery measurement
 uint16_t batt_array[60];
+uint16_t vreff_array[60];
 volatile uint32_t batt_val;
 volatile uint32_t voltage_ref_val;
-float batt_adc_const;
+volatile float batt_adc_const;
 
 volatile uint8_t cpuClkLowFlag;
 
@@ -201,7 +204,7 @@ float get_batt_voltage() {
 	// get current conversion constant
 	if (boardRev == REV2B) {
 		batt_adc_const = (VOLTAGE_REF_VAL_DEF) / (float)voltage_ref_val;
-		//printf("measuring: ref: %u, const: %u, voltage:%u\n", voltage_ref_val, (uint32_t)(batt_adc_const*100000), (uint32_t) ((float)batt_val * batt_adc_const * 100.0));
+		//printf("measuring: ref: %u, const: %u, battAdcVal: %u voltage:%u\n", voltage_ref_val, (uint32_t)(batt_adc_const*100000), batt_val, (uint32_t) ((float)batt_val * batt_adc_const * 100.0));
 		return ( (((float)batt_val) * batt_adc_const) / 0.6); //1.666 is a const of the battery voltage divider
 	} else if (boardRev == REV1) {
 		return (((float)batt_val) * batt_adc_const);
@@ -210,10 +213,13 @@ float get_batt_voltage() {
 
 uint8_t get_batt_percent() {
 	uint8_t percent;
+
 	percent = (uint8_t)((get_batt_voltage() - MIN_VOLTAGE) / ((MAX_VOLTAGE - MIN_VOLTAGE) / 100 ));
+
 	if (percent > 100) {
 		percent = 100;
 	}
+
 	return percent;
 }
 
@@ -327,7 +333,8 @@ void EXTI0_IRQHandler(void) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	(void) (GPIO_Pin);
 	if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0) {
-		svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
+		sdaWakeupFlag = 1;
+		//svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
 	}
 }
 
@@ -433,6 +440,63 @@ void updateTouchScreen(){
 
 	redraw_lock = 0;
 }
+
+void lowBattCheckAndHalt() {
+	if ((uint32_t)(get_batt_voltage() * 10) < 31) {
+		while(1) {
+			tickLock = 0;
+			redraw_lock = 1;
+			LCD_Fill(LCD_MixColor(255, 0, 0));
+			LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"Low battery!");
+			Delay(90000000);
+			svp_set_lcd_state(LCD_OFF);
+			sda_set_led(0);
+			lcd_hw_sleep();
+			HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+			update_power_status();
+			if (svpSGlobal.pwrType == POWER_USB) {
+				HAL_NVIC_SystemReset();
+				while(1);
+			}
+		}
+	}
+}
+
+void measureBatteryVoltage() {
+	static uint16_t batt_cnt;
+
+	if (batt_cnt < 59) {
+		batt_array[batt_cnt] = getBatteryVoltage();
+		vreff_array[batt_cnt] = getRefVoltage();
+		batt_cnt++;
+	} else {
+		uint32_t temp;
+		uint32_t temp2;
+		uint16_t i;
+
+		temp = 0;
+		temp2 = 0;
+		for(i = 0; i < 59; i++) {
+			temp += batt_array[i];
+			temp2 += vreff_array[i];
+		}
+
+		voltage_ref_val = temp2 / 59 + temp2 % 59;
+		batt_val = temp / 59 + temp % 59;
+
+		temp = (uint32_t)(get_batt_voltage() * 10);
+		svpSGlobal.battString[0] = ' ';
+		svpSGlobal.battString[1] = temp / 10 + 48;
+		svpSGlobal.battString[2] = '.';
+		svpSGlobal.battString[3] = temp % 10 + 48;
+		svpSGlobal.battString[4] = 'V';
+		svpSGlobal.battString[5] = 0;
+
+		svpSGlobal.battPercentage = get_batt_percent();
+		batt_cnt = 0;
+	}
+}
+
 /*============================The SysTick monster============================*/
 
 void SysTick_Handler(void) {
@@ -440,7 +504,6 @@ void SysTick_Handler(void) {
 
 	static uint8_t led_state;
 	static uint16_t led_cnt;
-	static uint16_t batt_cnt;
 
 	static uint8_t oldsec;
 
@@ -506,7 +569,7 @@ void SysTick_Handler(void) {
 				}
 			}
 		}
-
+		sdaWakeupFlag = 0; // button was handled
 		pwrBtnPrev = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
 
 		tick_update_buttons(btn);
@@ -578,31 +641,7 @@ void SysTick_Handler(void) {
 				}
 				oldsec = rtc.sec;
 
-				if (batt_cnt < 59) {
-					batt_array[batt_cnt] = getBatteryVoltage();
-					batt_cnt++;
-				} else {
-					uint32_t temp;
-					uint16_t i;
-
-					temp = 0;
-					for(i = 0; i < 59; i++) {
-						temp += batt_array[i];
-					}
-					voltage_ref_val = getRefVoltage();
-					batt_val = temp / 60 + temp % 60;
-
-					temp = (uint32_t)(get_batt_voltage() * 10);
-					svpSGlobal.battString[0] = ' ';
-					svpSGlobal.battString[1] = temp / 10 + 48;
-					svpSGlobal.battString[2] = '.';
-					svpSGlobal.battString[3] = temp % 10 + 48;
-					svpSGlobal.battString[4] = 'V';
-					svpSGlobal.battString[5] = 0;
-
-					svpSGlobal.battPercentage = get_batt_percent();
-					batt_cnt = 0;
-				}
+				measureBatteryVoltage();
 			}
 
 			if ((counter > 15)) { //překreslování a načtení nového stavu vstupů po cca 33ms
@@ -657,6 +696,19 @@ int main() {
 	svp_set_backlight(255);
 
 	LCD_init(319, 479, OR_NORMAL);
+	//if not powered from usb:
+	update_power_status();
+
+	if (svpSGlobal.pwrType == POWER_BATT) {
+		batt_val = 0;
+		//measure the initial battery state
+		while (batt_val == 0) {
+			measureBatteryVoltage();
+		}
+		// and eventualy halt
+		lowBattCheckAndHalt();
+	}
+
 	LCD_Fill(0xFFFF);
 	sda_set_led(1);
 	Delay(2000000);
@@ -670,14 +722,12 @@ int main() {
 
 	// UP on both board revisions goes straight to calibration
 	if (HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET) {
-		printf("LCD Calibbration!\n");
+		printf("LCD Calibration!\n");
 		sda_calibrate();
 		sda_setLcdCalibrationFlag(1);
 	}
 
 	svp_mount();
-
-	printf("ff init\n");
 
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
 
@@ -691,7 +741,6 @@ int main() {
 				break;
 			}
 		}
-
 	}else if (ppm_get_width((uint8_t *) "splash.ppm") == 160) {
 		draw_ppm(0, 0, 2,(uint8_t *) "splash.ppm");
 		count = 25000000;
@@ -709,7 +758,7 @@ int main() {
 	while(1) {
 		sda_main_loop();
 
-		if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0) {
+		if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0 && sdaWakeupFlag == 0) {
 			tickLock = 0;
 			// SDA wil go to sleep for about a 1s, then RTC or PWRBUTTON wakes it up
 			sda_sleep();
@@ -720,5 +769,6 @@ int main() {
 			svpSGlobal.uptime = (uint32_t)svpSGlobal.timestamp - uptimeSleepStart;
 			tickLock = 1;
 		}
+		lowBattCheckAndHalt();
 	}
 }
