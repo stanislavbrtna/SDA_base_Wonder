@@ -76,11 +76,14 @@ void lcd_send_cmd_d(uint8_t data); // send with delay
  *
  */
 
+void lcd_Init_Seq_9486();
 void lcd_Init_Seq_9488();
+void lcd_Init_Seq_9481();
 
 uint8_t lcd_hw_init(){
 	lcd_GPIO_Init();
-	lcd_Init_Seq_9488();
+	lcd_Init_Seq_9486();
+	//lcd_Init_Seq_9488();
 	return 0;
 }
 
@@ -218,7 +221,7 @@ void writeRegister16(uint8_t x,uint16_t data) {
 	lcd_send_data(0x00FF & data);
 }
 
-void lcd_Init_Seq_9488(){
+void lcd_Init_Seq_9486(){
 
 	lcd_set_RST_low();
 	lcd_Delay(300);
@@ -279,6 +282,74 @@ void lcd_Init_Seq_9488(){
 
 		lcd_send_cmd_d(0x29);                     // display on
 		lcd_Delay(150);
+}
+
+void lcd_Init_Seq_9488(){
+
+	lcd_set_RST_low();
+	lcd_Delay(300);
+	lcd_set_RST_high();
+	lcd_Delay(300);
+
+	lcd_Delay(50);
+  lcd_send_cmd_d(0xE0);
+	lcd_send_data(0x00);
+	lcd_send_data(0x03);
+	lcd_send_data(0x09);
+	lcd_send_data(0x08);
+	lcd_send_data(0x16);
+	lcd_send_data(0x0A);
+	lcd_send_data(0x3F);
+	lcd_send_data(0x78);
+	lcd_send_data(0x4C);
+	lcd_send_data(0x09);
+	lcd_send_data(0x0A);
+	lcd_send_data(0x08);
+	lcd_send_data(0x16);
+	lcd_send_data(0x1A);
+	lcd_send_data(0x0F);
+
+
+	lcd_send_cmd_d(0XE1);
+	lcd_send_data(0x00);
+	lcd_send_data(0x16);
+	lcd_send_data(0x19);
+	lcd_send_data(0x03);
+	lcd_send_data(0x0F);
+	lcd_send_data(0x05);
+	lcd_send_data(0x32);
+	lcd_send_data(0x45);
+	lcd_send_data(0x46);
+	lcd_send_data(0x04);
+	lcd_send_data(0x0E);
+	lcd_send_data(0x0D);
+	lcd_send_data(0x35);
+	lcd_send_data(0x37);
+	lcd_send_data(0x0F);
+
+	lcd_send_cmd_d(0XC0);      //Power Control 1
+	lcd_send_data(0x17);    //Vreg1out
+	lcd_send_data(0x15);    //Verg2out
+
+	lcd_send_cmd_d(0xC1);      //Power Control 2
+	lcd_send_data(0x41);    //VGH,VGL
+
+	lcd_send_cmd_d(0xC5);      //Power Control 3
+	lcd_send_data(0x00);
+	lcd_send_data(0x12);    //Vcom
+	lcd_send_data(0x80);
+
+	lcd_send_cmd_d(0x36);      //Memory Access
+	lcd_send_data(0x48);
+
+	lcd_send_cmd_d(0x3A);      // Interface Pixel Format
+	lcd_send_data(0x55);
+
+	lcd_send_cmd_d(0x11);                     // sleep out
+	lcd_Delay(150);
+
+	lcd_send_cmd_d(0x29);                     // display on
+	lcd_Delay(150);
 }
 
 // ILI9481
