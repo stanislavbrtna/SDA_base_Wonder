@@ -108,7 +108,7 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 	}
 	int tries;
 
-	for(tries = 0; tries < 5; ++tries) {
+	for(tries = 0; tries < 10; ++tries) {
 		printf("sd init:\n");
 		/* HAL SD initialization */
 		if(HAL_SD_Init(&mainSD) != HAL_OK)
@@ -117,18 +117,26 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		}
 		printf("ok:\n");
 
+		init = 1;
+
 		printf("sd widebus:\n");
 		//Enable wide operation
 		if(HAL_SD_ConfigWideBusOperation(&mainSD, SDIO_BUS_WIDE_4B) != HAL_OK)
 		{
-
-				continue;
+			if (tries > 5){
+				printf("going in 1bit mode\n");
+				return HAL_OK;
+			}	else
+			continue;
 		}
 		printf("ok:\n");
 
 		/* Everything is ok */
-		init = 1;
+
 		return HAL_OK;
+
+		mainSD.Init.ClockDiv = 10 + 200 * (tries + 1);
+		printf("setting clock div to? %u\n", 10 + 20 * (tries + 1));
 	}
 	init = 2;
 	printf("SD init failed\n");
