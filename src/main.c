@@ -204,6 +204,7 @@ float get_batt_voltage() {
 	// get current conversion constant
 	if (boardRev == REV2B) {
 		batt_adc_const = (VOLTAGE_REF_VAL_DEF) / (float)voltage_ref_val;
+		ADC_Measurement_const = batt_adc_const;
 		//printf("measuring: ref: %u, const: %u, battAdcVal: %u voltage:%u\n", voltage_ref_val, (uint32_t)(batt_adc_const*100000), batt_val, (uint32_t) ((float)batt_val * batt_adc_const * 100.0));
 		return ( (((float)batt_val) * batt_adc_const) / 0.6); //1.666 is a const of the battery voltage divider
 	} else if (boardRev == REV1) {
@@ -304,9 +305,6 @@ void system_clock_set_normal(void){
 }
 
 void sda_sleep() {
-
-	// set up the RTC alarm and pwr button wakeup
-
 	tickLock = 0;
 	touchSleep();
 	if(cpuClkLowFlag == 0){
@@ -442,7 +440,7 @@ void updateTouchScreen(){
 }
 
 void lowBattCheckAndHalt() {
-	if ((uint32_t)(get_batt_voltage() * 10) < 31) {
+	if (((uint32_t)(get_batt_voltage() * 10) < 31) && (svpSGlobal.pwrType == POWER_BATT)) {
 		while(1) {
 			tickLock = 0;
 			redraw_lock = 1;
