@@ -1,6 +1,15 @@
 #ifndef SDA_PLATFORM_H
 #define SDA_PLATFORM_H
 
+// Constants
+
+#define MIN_VOLTAGE 3.1
+#define MAX_VOLTAGE 4.0
+#define BATT_ADC_CONST_DEF 0.0013657
+#define VOLTAGE_REF_VAL_DEF 0.626
+
+// Pin & Port defs
+
 #define SDA_BASE_SYSLED_PORT GPIOB
 #define SDA_BASE_SYSLED_PIN GPIO_PIN_2
 
@@ -33,7 +42,11 @@
 #define SDA_BASE_PIN_PULLDOWN 1
 #define SDA_BASE_PIN_PULLUP 1
 
+// Board rev. enum
+
 typedef enum {UNKNOWN, REV1, REV2B} wonderBoardRevisions;
+
+// misc includes
 
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"

@@ -2,23 +2,16 @@
 #include "sda_platform.h"
 #include "math.h"
 
-#define MIN_VOLTAGE 3.1
-#define MAX_VOLTAGE 4.0
-#define BATT_ADC_CONST_DEF 0.0013657
-#define VOLTAGE_REF_VAL_DEF 0.626
-
-
-// hal handles
+/*=========================== Globals =======================================*/
+// HAL handles
 ADC_HandleTypeDef g_AdcHandle;
 ADC_HandleTypeDef g_AdcHandle2;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
-extern RNG_HandleTypeDef rng;
-/*============================globals========================================*/
 
+// SDA Globals
 FATFS FatFs;
 svpStatusStruct svpSGlobal;
-
 volatile wonderBoardRevisions boardRev;
 
 uint32_t uptimeSleepStart;
@@ -39,11 +32,6 @@ volatile uint8_t Lcd_off_flag;
 
 volatile uint32_t backlight_scaler;
 
-volatile uint8_t sdaSerialEnabled;
-volatile uint8_t sdaDbgSerialEnabled;
-
-
-extern uint8_t beep_flag;
 // led pattern array
 uint8_t led_pattern[10];
 uint16_t led_counter;
@@ -57,147 +45,18 @@ volatile uint32_t batt_val;
 volatile uint32_t voltage_ref_val;
 volatile float batt_adc_const;
 
-volatile uint8_t cpuClkLowFlag;
+volatile uint8_t cpuClkLowFlag; // for the current state of the CPU speed
 
 volatile float ADC_Measurement_const;
 
-void SystemClock_Config(void);
 void __initialize_hardware(void);
-/*============================Local headers==================================*/
+/*=========================== Local headers =================================*/
 void Delay(__IO uint32_t nCount);
 void beep_timer_init();
 void rrand_init();
-/*============================Delay==========================================*/
 
 void Delay(__IO uint32_t nCount) {
   for(; nCount != 0; nCount--);
-}
-
-void sda_set_led(uint8_t set) {
-	if (set) {
-		HAL_GPIO_WritePin(SDA_BASE_SYSLED_PORT, SDA_BASE_SYSLED_PIN, GPIO_PIN_SET);
-	} else {
-		HAL_GPIO_WritePin(SDA_BASE_SYSLED_PORT, SDA_BASE_SYSLED_PIN, GPIO_PIN_RESET);
-	}
-}
-
-/*============================SDA API functions==============================*/
-//TODO: fix expansion serial port
-
-uint8_t sda_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
-	return uart3_recieve(str, len, timeout);
-}
-
-void sda_serial_transmit(uint8_t *str, uint32_t len) {
-	uart3_transmit(str, len);
-}
-
-void sda_serial_enable() {
-	sdaSerialEnabled = 1;
-	HAL_UART3_MspInit(&huart3);
-	MX_USART3_UART_Init();
-}
-
-void sda_serial_disable() {
-	HAL_UART_AbortReceive(&huart3);
-	MX_USART3_UART_DeInit();
-	sdaSerialEnabled = 0;
-}
-
-uint8_t sda_serial_is_enabled() {
-	return sdaSerialEnabled;
-}
-
-void sda_dbg_serial_enable() {
-	HAL_UART_MspInit(&huart2);
-	MX_USART2_UART_Init();
-	sdaDbgSerialEnabled = 1;
-}
-
-void sda_dbg_serial_disable() {
-	sdaDbgSerialEnabled = 0;
-	MX_USART2_UART_DeInit();
-}
-
-uint8_t sda_dbg_serial_is_enabled() {
-	return sdaDbgSerialEnabled;
-}
-
-uint32_t svp_random() {
-	uint32_t ret = 0;
-	HAL_RNG_GenerateRandomNumber(&rng, &ret);
-	return ret/2;
-}
-
-void svp_set_lcd_state(lcdStateType state) {
-	if(state == LCD_ON) {
-		system_clock_set_normal();
-		lcd_hw_wake();
-		Lcd_on_flag = 200;
-	} else if (state == LCD_OFF) {
-		lcd_bl_off();
-		Lcd_off_flag = 30;
-	}
-	svpSGlobal.lcdState = state;
-}
-void svp_set_backlight(uint8_t val) {
-	lcd_hw_set_backlight(val);
-}
-
-void led_set_pattern(ledPatternType pat) {
-	uint8_t x;
-	if (pat == LED_ON) {
-		for (x = 0; x < 10; x++) {
-			led_pattern[x] = 1;
-		}
-	}
-
-	if (pat == LED_OFF) {
-		for (x = 0; x < 10; x++) {
-			led_pattern[x] = 0;
-		}
-	}
-
-	if (pat == LED_BLINK) {
-		led_pattern[0] = 1;
-		led_pattern[1] = 1;
-		led_pattern[2] = 1;
-		led_pattern[3] = 1;
-		led_pattern[4] = 1;
-		led_pattern[5] = 1;
-		led_pattern[6] = 0;
-		led_pattern[7] = 0;
-		led_pattern[8] = 0;
-		led_pattern[9] = 0;
-	}
-
-	if (pat == LED_SHORTBLINK) {
-		led_pattern[0] = 0;
-		led_pattern[1] = 0;
-		led_pattern[2] = 0;
-		led_pattern[3] = 1;
-		led_pattern[4] = 0;
-		led_pattern[5] = 0;
-		led_pattern[6] = 0;
-		led_pattern[7] = 0;
-		led_pattern[8] = 0;
-		led_pattern[9] = 0;
-	}
-
-	if (pat == LED_ALARM) {
-		led_pattern[0] = 1;
-		led_pattern[1] = 0;
-		led_pattern[2] = 1;
-		led_pattern[3] = 0;
-		led_pattern[4] = 1;
-		led_pattern[5] = 0;
-		led_pattern[6] = 1;
-		led_pattern[7] = 0;
-		led_pattern[8] = 1;
-		led_pattern[9] = 0;
-	}
-
-	led_counter = 0;
 }
 
 float get_batt_voltage() {
@@ -210,98 +69,17 @@ float get_batt_voltage() {
 	} else if (boardRev == REV1) {
 		return (((float)batt_val) * batt_adc_const);
 	}
+
+	return 0;
 }
 
 uint8_t get_batt_percent() {
 	uint8_t percent;
-
 	percent = (uint8_t)((get_batt_voltage() - MIN_VOLTAGE) / ((MAX_VOLTAGE - MIN_VOLTAGE) / 100 ));
-
 	if (percent > 100) {
 		percent = 100;
 	}
-
 	return percent;
-}
-
-void system_clock_set_low(void) {
-
-	// abychom si nekazili beeper
-	// do not set low clock speed if beeper is on
-	if(beep_flag != 0) {
-		return;
-	}
-
-	// Enable Power Control clock
-	__PWR_CLK_ENABLE();
-
-	RCC_OscInitTypeDef RCC_OscInitStruct;
-	RCC_ClkInitTypeDef RCC_ClkInitStruct;
-
-	HAL_RCC_DeInit();
-	//hse config
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLM = (HSE_VALUE/1000000u);
-	RCC_OscInitStruct.PLL.PLLN = 336;
-	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV8; /* 168 MHz */ //div2
-	RCC_OscInitStruct.PLL.PLLQ = 7; /* To make USB work. */
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct)==HAL_ERROR)
-		printf("ERROR kdyz menim freq! na 42mhz\n");
-
-	// Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
-	// clocks dividers
-	RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK
-	  | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-
-	// This is expected to work for most large cores.
-	// Check and update it for your own configuration.
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-	HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5);
-
-	SystemCoreClockUpdate();
-
-	HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
-
-	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
-
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2); //max 144Mhz
-
-	MX_USART2_UART_Init();
-	lcd_bl_timer_OC_update();
-
-	if (sda_serial_is_enabled()) {
-		sda_serial_disable();
-		sda_serial_enable();
-	}
-
-	cpuClkLowFlag = 1;
-}
-
-void system_clock_set_normal(void){
-	// do not change clock speed if beeper is on
-	// abychom si nekazili beeper
-	if (beep_flag != 0) {
-		return;
-	}
-
-	HAL_RCC_DeInit();
-	SystemClock_Config();
-	SystemCoreClockUpdate();
-	MX_USART2_UART_Init();
-	lcd_bl_timer_OC_update();
-
-	if (sda_serial_is_enabled()) {
-		sda_serial_disable();
-		sda_serial_enable();
-	}
-
-	cpuClkLowFlag = 0;
 }
 
 void sda_sleep() {
@@ -332,48 +110,36 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	(void) (GPIO_Pin);
 	if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0) {
 		sdaWakeupFlag = 1;
-		//svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
 	}
 }
 
-void svs_hardErrHandler() {
-	tickLock = 0;
-	redraw_lock = 1;
-	LCD_Fill(LCD_MixColor(255, 0, 0));
-	LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"Hard error occured!\nSDA-os will now reset!");
-	Delay(50000000);
-	HAL_NVIC_SystemReset();
-	while(1);
-}
-
 void tick_update_buttons(uint8_t *btn) {
-	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET){ // A
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET) {
 		btn[0] = 1;
 	} else {
 		btn[0] = 0;
 	}
-	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_LEFT_PORT, SDA_BASE_BTN_LEFT_PIN) == GPIO_PIN_SET){ // Left
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_LEFT_PORT, SDA_BASE_BTN_LEFT_PIN) == GPIO_PIN_SET) {
 		btn[1] = 1;
 	} else {
 		btn[1] = 0;
 	}
-	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET){ // Up
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET) {
 		btn[2] = 1;
 	} else {
 		btn[2] = 0;
 	}
-	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET){ // Down
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
 		btn[3] = 1;
 	} else {
 		btn[3] = 0;
 	}
-
-	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_RIGHT_PORT, SDA_BASE_BTN_RIGHT_PIN) == GPIO_PIN_SET){ // Right
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_RIGHT_PORT, SDA_BASE_BTN_RIGHT_PIN) == GPIO_PIN_SET) {
 		btn[4] = 1;
 	} else {
 		btn[4] = 0;
 	}
-	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET){ // B
+	if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
 		btn[5] = 1;
 	} else {
 		btn[5] = 0;
@@ -401,7 +167,7 @@ void sda_hw_sleep() {
 	lcd_hw_sleep();
 }
 
-void updateTouchScreen(){
+void updateTouchScreen() {
 	redraw_lock = 1;
 	static uint8_t touchPrev;
 	static uint8_t touchNow;
@@ -495,7 +261,7 @@ void measureBatteryVoltage() {
 	}
 }
 
-/*============================The SysTick monster============================*/
+/*=========================== The SysTick Monster ===========================*/
 
 void SysTick_Handler(void) {
 	static uint16_t sec;
@@ -642,7 +408,7 @@ void SysTick_Handler(void) {
 				measureBatteryVoltage();
 			}
 
-			if ((counter > 15)) { //překreslování a načtení nového stavu vstupů po cca 33ms
+			if ((counter > 15)) { // Touch update and redraw of the system bar
 				counter = 0;
 
 				if ((touch_lock == 0) && (svpSGlobal.lcdState == LCD_ON)) {
@@ -655,8 +421,10 @@ void SysTick_Handler(void) {
 					redraw_lock = 0;
 				}
 			}
+
 			irq_lock = 0;
 		}
+
 		// counter for use inside SVS apps
 		if (svsCounter > 0) {
 			svsCounter--;
@@ -664,13 +432,51 @@ void SysTick_Handler(void) {
 	}
 }
 
+static void show_splash() {
+	if (ppm_get_width((uint8_t *) "splash.ppm") == 320) {
+		draw_ppm(0, 0, 1,(uint8_t *) "splash.ppm");
+	}else if (ppm_get_width((uint8_t *) "splash.ppm") == 160) {
+		draw_ppm(0, 0, 2,(uint8_t *) "splash.ppm");
+	}
+
+	for(uint32_t count = 25000000; count != 0; count--) {
+		if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
+			break;
+		}
+		if(HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET) {
+			break;
+		}
+		if(HAL_GPIO_ReadPin(SDA_BASE_BTN_LEFT_PORT, SDA_BASE_BTN_LEFT_PIN) == GPIO_PIN_SET) {
+			break;
+		}
+		if(HAL_GPIO_ReadPin(SDA_BASE_BTN_RIGHT_PORT, SDA_BASE_BTN_RIGHT_PIN) == GPIO_PIN_SET) {
+			break;
+		}
+		if(HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
+			break;
+		}
+	}
+}
+
+static void try_lcd() {
+	LCD_Fill(0xFFFF);
+	sda_set_led(1);
+	Delay(2000000);
+	LCD_Fill(0x0);
+	sda_set_led(0);
+	Delay(2000000);
+	LCD_Fill(0xFFFF);
+	LCD_Fill(0x0);
+	sda_set_led(1);
+	LCD_setDrawArea(0, 0, 319, 479);
+}
+
 int main() {
 	__initialize_hardware();
 
+	// Set up the consts
 	boardRev = UNKNOWN;
-
 	ADC_Measurement_const = BATT_ADC_CONST_DEF;
-
 	batt_adc_const = BATT_ADC_CONST_DEF;
 
 	tickLock = 0;
@@ -681,22 +487,24 @@ int main() {
 
 	printf("SDA-WONDER\nStanda 2018\n\n");
 
-	// drivers init
+	// Drivers init
 	rtc_init();
 	rrand_init();
 	beep_timer_init();
 	backlight_timer_init();
 	touchInit();
 
-	//backlight init
+	// Backlight initial setup
 	svpSGlobal.lcdBacklight = 255;
 	svp_set_lcd_state(LCD_ON);
 	svp_set_backlight(255);
 
 	LCD_init(319, 479, OR_NORMAL);
-	//if not powered from usb:
+
+	// power status update
 	update_power_status();
 
+	// if not powered from usb:
 	if (svpSGlobal.pwrType == POWER_BATT) {
 		batt_val = 0;
 		//measure the initial battery state
@@ -707,16 +515,8 @@ int main() {
 		lowBattCheckAndHalt();
 	}
 
-	LCD_Fill(0xFFFF);
-	sda_set_led(1);
-	Delay(2000000);
-	LCD_Fill(0x0);
-	sda_set_led(0);
-	Delay(2000000);
-	LCD_Fill(0xFFFF);
-	LCD_Fill(0x0);
-	sda_set_led(1);
-	LCD_setDrawArea(0,0,319,479);
+	// Blink with LCD and with notif. led
+	try_lcd();
 
 	// UP on both board revisions goes straight to calibration
 	if (HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET) {
@@ -725,37 +525,21 @@ int main() {
 		sda_setLcdCalibrationFlag(1);
 	}
 
+	// FS mount is performed after the power check, to prevent SD corruption
 	svp_mount();
 
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+	sda_set_led(0);
 
-	uint32_t count;
+	show_splash();
 
-	if (ppm_get_width((uint8_t *) "splash.ppm") == 320) {
-		draw_ppm(0, 0, 1,(uint8_t *) "splash.ppm");
-		count = 25000000;
-			for(; count != 0; count--) {
-			if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
-				break;
-			}
-		}
-	}else if (ppm_get_width((uint8_t *) "splash.ppm") == 160) {
-		draw_ppm(0, 0, 2,(uint8_t *) "splash.ppm");
-		count = 25000000;
-		for(; count != 0; count--) {
-			if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET){
-				break;
-			}
-		}
-	}
-
-	// update time before jumping into main
+	// Update time before jumping into main
 	rtc_update_struct();
 	sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
 
 	while(1) {
 		sda_main_loop();
 
+		// Sleep mode handling
 		if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0 && sdaWakeupFlag == 0) {
 			tickLock = 0;
 			// SDA wil go to sleep for about a 1s, then RTC or PWRBUTTON wakes it up
@@ -767,6 +551,8 @@ int main() {
 			svpSGlobal.uptime = (uint32_t)svpSGlobal.timestamp - uptimeSleepStart;
 			tickLock = 1;
 		}
+
+		// Also halt if battery voltage is too low
 		lowBattCheckAndHalt();
 	}
 }
