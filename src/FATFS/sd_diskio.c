@@ -44,6 +44,7 @@
   ******************************************************************************
   */ 
 
+#ifndef SDA_WONDER_USE_SPI
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "diskio.h"
@@ -335,6 +336,7 @@ DWORD get_fattime()
 				(svpSGlobal.hour)<<11 | (svpSGlobal.min)<<5 | (svpSGlobal.sec/2%30);
 
 }
-  
+
+#endif
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
