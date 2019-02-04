@@ -62,5 +62,7 @@ typedef enum {UNKNOWN, REV1, REV2B} wonderBoardRevisions;
 #include "SDA_OS/SDA_OS.h"
 
 void sda_platform_gpio_init();
+void SystemClock_Config();
+void Delay(__IO uint32_t nCount);
 
 #endif
