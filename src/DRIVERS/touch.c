@@ -589,13 +589,15 @@ void sda_calibrate () {
 		LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
 #else
 #if LANG_VAL==0
-		LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Test Kalibrace\n(Použijte tlačítka k potvrzení)");
+		LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Test Kalibrace");
+		LCD_DrawText_ext(40, 260, 0xFFFF, (uint8_t *)"(Použijte tlačítka k potvrzení)");
 		LCD_DrawText_ext(10, 420, 0xFFFF, (uint8_t *)"Rekalibrovat");
 		LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
 #endif
 
 #if LANG_VAL==1
-		LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Calibration test\n(use buttons to select option)");
+		LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Calibration test");
+		LCD_DrawText_ext(40, 260, 0xFFFF, (uint8_t *)"(use buttons to select option)");
 		LCD_DrawText_ext(10, 420, 0xFFFF, (uint8_t *)"Calibrate again");
 		LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
 #endif
