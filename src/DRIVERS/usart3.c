@@ -86,7 +86,7 @@ void uart3_transmit(uint8_t *str, uint32_t len) {
 }
 
 //HAL_StatusTypeDef HAL_UART_AbortReceive(UART_HandleTypeDef *huart);
-extern uint8_t tickLock;
+extern volatile sdaLockState tick_lock;
 
 uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 	// todo: recieve api needs to be polling: something like recv(numOfBytes)
@@ -105,12 +105,13 @@ uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 	}
 
 	uint32_t i = 0;
-	tickLock = 0;
+	tick_lock = SDA_LOCK_LOCKED;
 	//printf("dbg: usart start!\n");
 	while (i < len) {
 		uint8_t c;
 		if (HAL_UART_Receive(&huart3, &c, sizeof(c), timeout) != HAL_OK){
 			printf("uart3 recv error\n");
+			tick_lock = SDA_LOCK_UNLOCKED; // enable tick again!
 			return 0;
 		}
 		/*
@@ -137,7 +138,7 @@ uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 		}
 	}
 
-	tickLock = 1;
+	tick_lock = SDA_LOCK_UNLOCKED;
 
 	return 1;
 }

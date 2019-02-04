@@ -8,8 +8,7 @@ extern uint8_t led_pattern[10];
 extern uint16_t led_counter;
 extern volatile uint8_t cpuClkLowFlag;
 extern uint8_t beep_flag;
-extern volatile uint8_t tickLock;
-extern volatile uint8_t redraw_lock;
+extern volatile sdaLockState tick_lock;
 
 extern volatile uint8_t Lcd_on_flag;
 extern volatile uint8_t Lcd_off_flag;
@@ -225,8 +224,7 @@ void system_clock_set_normal(void){
 }
 
 void svs_hardErrHandler() {
-	tickLock = 0;
-	redraw_lock = 1;
+	tick_lock = SDA_LOCK_LOCKED;
 	LCD_Fill(LCD_MixColor(255, 0, 0));
 	LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"Hard error occured!\nSDA-os will now reset!");
 	Delay(50000000);

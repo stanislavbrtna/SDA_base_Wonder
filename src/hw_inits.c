@@ -401,7 +401,7 @@ float sda_external_ADC_get() {
 	ADC_ChannelConfTypeDef adcChannel;
 	GPIO_InitTypeDef gpioInit;
 
-	irq_lock = 1;
+	tick_lock = SDA_LOCK_LOCKED;
 
 	__GPIOB_CLK_ENABLE();
 	__GPIOA_CLK_ENABLE();
@@ -466,6 +466,6 @@ float sda_external_ADC_get() {
 
 	touchAdcInitExt();
 
-	irq_lock = 0;
+	tick_lock = SDA_LOCK_UNLOCKED;
 	return (float)measuredVoltage * ADC_Measurement_const;
 }

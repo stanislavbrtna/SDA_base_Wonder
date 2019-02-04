@@ -16,17 +16,17 @@ volatile wonderBoardRevisions boardRev;
 
 uint32_t uptimeSleepStart;
 
+// misc system locks
+volatile sdaLockState touch_lock;  // disables touch in irq
+volatile sdaLockState irq_lock;    // disables touch, redraw in irq and battery measurement
+volatile sdaLockState tick_lock;   // disables all systick stuff
+
 // systick globals
-volatile uint8_t touch_lock;
-volatile uint8_t redraw_lock;
-volatile uint8_t irq_lock;
 volatile uint32_t counter;
 volatile uint16_t svsCounter;
 volatile uint16_t svsLoadCounter;
 
 volatile uint8_t serialBuf[16];
-
-volatile uint8_t tickLock;
 volatile uint8_t Lcd_on_flag;
 volatile uint8_t Lcd_off_flag;
 
@@ -83,7 +83,7 @@ uint8_t get_batt_percent() {
 }
 
 void sda_sleep() {
-	tickLock = 0;
+	tick_lock = SDA_LOCK_LOCKED;
 	touchSleep();
 	if(cpuClkLowFlag == 0){
 		system_clock_set_low();
@@ -96,7 +96,7 @@ void sda_sleep() {
   HAL_ResumeTick();
   sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
   touchWake();
-  tickLock = 1;
+  tick_lock = SDA_LOCK_UNLOCKED;
   //printf("sda leaving deep sleep\n");
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET);
 
@@ -168,7 +168,6 @@ void sda_hw_sleep() {
 }
 
 void updateTouchScreen() {
-	redraw_lock = 1;
 	static uint8_t touchPrev;
 	static uint8_t touchNow;
 	touchXY pRetval;
@@ -202,14 +201,12 @@ void updateTouchScreen() {
 		touchPrev = touchNow;
 	}
 
-	redraw_lock = 0;
 }
 
 void lowBattCheckAndHalt() {
-	if (((uint32_t)(get_batt_voltage() * 10) < 31) && (svpSGlobal.pwrType == POWER_BATT)) {
+	if (((uint32_t)(get_batt_voltage() * 10) < 31) && (svpSGlobal.pwrType == POWER_BATT) && (batt_val != 0)) {
 		while(1) {
-			tickLock = 0;
-			redraw_lock = 1;
+			tick_lock = SDA_LOCK_LOCKED;
 			LCD_Fill(LCD_MixColor(255, 0, 0));
 			LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"Low battery!");
 			Delay(90000000);
@@ -296,7 +293,7 @@ void SysTick_Handler(void) {
 
 	sda_base_spkr_irq_handler();
 
-	if (tickLock == 1) {
+	if (tick_lock == SDA_LOCK_UNLOCKED) {
 		counter++;
 
 		static uint32_t pwrLongPressCnt;
@@ -380,8 +377,8 @@ void SysTick_Handler(void) {
 			}
 		}
 
-		if (irq_lock == 0) {
-			irq_lock = 1;
+		if (irq_lock == SDA_LOCK_UNLOCKED) {
+			irq_lock = SDA_LOCK_LOCKED;
 			update_power_status();
 			if(sec < 300) {
 				sec++;
@@ -411,18 +408,16 @@ void SysTick_Handler(void) {
 			if ((counter > 15)) { // Touch update and redraw of the system bar
 				counter = 0;
 
-				if ((touch_lock == 0) && (svpSGlobal.lcdState == LCD_ON)) {
+				if ((touch_lock == SDA_LOCK_UNLOCKED) && (svpSGlobal.lcdState == LCD_ON)) {
 					updateTouchScreen();
 				}
 
-				if (!redraw_lock) {
-					redraw_lock = 1;
-					svp_irq(svpSGlobal);
-					redraw_lock = 0;
-				}
+
+				svp_irq(svpSGlobal);
+
 			}
 
-			irq_lock = 0;
+			irq_lock = SDA_LOCK_UNLOCKED;
 		}
 
 		// counter for use inside SVS apps
@@ -433,10 +428,14 @@ void SysTick_Handler(void) {
 }
 
 static void show_splash() {
-	if (ppm_get_width((uint8_t *) "splash.ppm") == 320) {
-		draw_ppm(0, 0, 1,(uint8_t *) "splash.ppm");
-	}else if (ppm_get_width((uint8_t *) "splash.ppm") == 160) {
-		draw_ppm(0, 0, 2,(uint8_t *) "splash.ppm");
+	if (svp_fexists((uint8_t *) "splash.p16")) {
+		draw_ppm(0, 0, 1,(uint8_t *) "splash.p16");
+	} else {
+		if (ppm_get_width((uint8_t *) "splash.ppm") == 320) {
+			draw_ppm(0, 0, 1,(uint8_t *) "splash.ppm");
+		}else if (ppm_get_width((uint8_t *) "splash.ppm") == 160) {
+			draw_ppm(0, 0, 2,(uint8_t *) "splash.ppm");
+		}
 	}
 
 	for(uint32_t count = 25000000; count != 0; count--) {
@@ -479,8 +478,9 @@ int main() {
 	ADC_Measurement_const = BATT_ADC_CONST_DEF;
 	batt_adc_const = BATT_ADC_CONST_DEF;
 
-	tickLock = 0;
-	redraw_lock = 1;
+	tick_lock = SDA_LOCK_LOCKED;
+
+	irq_lock = SDA_LOCK_UNLOCKED;
 
 	sda_platform_gpio_init();
 	sda_dbg_serial_enable();
@@ -541,7 +541,7 @@ int main() {
 
 		// Sleep mode handling
 		if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0 && sdaWakeupFlag == 0) {
-			tickLock = 0;
+			tick_lock = SDA_LOCK_LOCKED;
 			// SDA wil go to sleep for about a 1s, then RTC or PWRBUTTON wakes it up
 			sda_sleep();
 			// update time
@@ -549,7 +549,7 @@ int main() {
 			sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
 			// update uptime
 			svpSGlobal.uptime = (uint32_t)svpSGlobal.timestamp - uptimeSleepStart;
-			tickLock = 1;
+			tick_lock = SDA_LOCK_UNLOCKED;
 		}
 
 		// Also halt if battery voltage is too low
