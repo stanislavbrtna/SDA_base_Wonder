@@ -2,7 +2,7 @@
 
 extern UART_HandleTypeDef huart3;
 extern volatile uint8_t sdaSerialEnabled;
-
+extern volatile sdaLockState tick_lock;
 
 void MX_USART3_UART_Init(void) {
   huart3.Instance = USART3;
@@ -85,57 +85,43 @@ void uart3_transmit(uint8_t *str, uint32_t len) {
 	HAL_UART_Transmit(&huart3, str, len, 1000);
 }
 
-//HAL_StatusTypeDef HAL_UART_AbortReceive(UART_HandleTypeDef *huart);
-extern volatile sdaLockState tick_lock;
-
 uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
-	// todo: recieve api needs to be polling: something like recv(numOfBytes)
-	// if (gotThose) { s = getData}
 	static uint8_t buff[512];
-	//uint32_t tickstart = 0;
-	//printf("dbg: init?!\n");
+	uint32_t tickstart = 0U;
+
 	if (!sdaSerialEnabled) {
 		sda_serial_enable();
 	}
-
-	//tickstart = HAL_GetTick();
 
 	for(uint32_t i = 0; i < sizeof(buff); i++) {
 		buff[i] = 0;
 	}
 
+	tickstart = HAL_GetTick();
+
 	uint32_t i = 0;
 	tick_lock = SDA_LOCK_LOCKED;
-	//printf("dbg: usart start!\n");
 	while (i < len) {
 		uint8_t c;
-		if (HAL_UART_Receive(&huart3, &c, sizeof(c), timeout) != HAL_OK){
-			printf("uart3 recv error\n");
-			tick_lock = SDA_LOCK_UNLOCKED; // enable tick again!
-			return 0;
-		}
-		/*
-		while (HAL_UART_GetState(&huart3) != HAL_UART_STATE_READY) {
-			if (HAL_GetTick() > tickstart + timeout) {
-				printf("dbg: usart recieve timed out!\n");
-				str[0] = 0;
-				HAL_UART_AbortReceive(&huart3);
-				tickLock = 1;
-				return 0;
+		if (HAL_UART_Receive(&huart3, &c, sizeof(c), timeout / len) != HAL_OK) {
+			if ( HAL_GetTick() > (tickstart + timeout + 100)) {
+				if(i == 0){
+					printf("uart3 recv error\n");
+					tick_lock = SDA_LOCK_UNLOCKED; // enable tick again!
+					return 0;
+				}else{
+					break;
+				}
 			}
-			//printf("dbg: recv whiling!\n");
+		}else{
+			buff[i] = c;
+			i++;
 		}
-		*/
-		buff[i] = c;
-		i++;
-		//printf("dbg: recv loop!\n");
+
 	}
 
 	for(i = 0; i < len; i++) {
 		str[i] = buff[i];
-		if (buff[i] == 0) {
-			//return 1;
-		}
 	}
 
 	tick_lock = SDA_LOCK_UNLOCKED;
