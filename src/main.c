@@ -41,6 +41,7 @@ volatile uint8_t sdaWakeupFlag;
 // battery measurement
 uint16_t batt_array[60];
 uint16_t vreff_array[60];
+volatile uint8_t batt_measured_flag;
 volatile uint32_t batt_val;
 volatile uint32_t voltage_ref_val;
 volatile float batt_adc_const;
@@ -61,25 +62,22 @@ void Delay(__IO uint32_t nCount) {
 
 float get_batt_voltage() {
 	// get current conversion constant
+	/*printf("measuring: ref: %u, const: %u, battAdcVal: %u voltage:%u\n",
+					voltage_ref_val,
+					(uint32_t)(batt_adc_const*100000),
+					batt_val,
+					(uint32_t) ((float)batt_val * batt_adc_const * 100.0)
+	);*/
+
 	if (boardRev == REV2B) {
 		batt_adc_const = (VOLTAGE_REF_VAL_DEF) / (float)voltage_ref_val;
 		ADC_Measurement_const = batt_adc_const;
-		//printf("measuring: ref: %u, const: %u, battAdcVal: %u voltage:%u\n", voltage_ref_val, (uint32_t)(batt_adc_const*100000), batt_val, (uint32_t) ((float)batt_val * batt_adc_const * 100.0));
 		return ( (((float)batt_val) * batt_adc_const) / 0.6); //1.666 is a const of the battery voltage divider
 	} else if (boardRev == REV1) {
 		return (((float)batt_val) * batt_adc_const);
 	}
 
 	return 0;
-}
-
-uint8_t get_batt_percent() {
-	uint8_t percent;
-	percent = (uint8_t)((get_batt_voltage() - MIN_VOLTAGE) / ((MAX_VOLTAGE - MIN_VOLTAGE) / 100 ));
-	if (percent > 100) {
-		percent = 100;
-	}
-	return percent;
 }
 
 void sda_sleep() {
@@ -225,8 +223,14 @@ void lowBattCheckAndHalt() {
 
 void measureBatteryVoltage() {
 	static uint16_t batt_cnt;
+	static systemPwrType oldBattState;
 
-	if (batt_cnt < 59) {
+	if (oldBattState != svpSGlobal.pwrType && svpSGlobal.pwrType == POWER_BATT) {
+		batt_cnt = 0;
+		batt_val = 0;
+	}
+
+	if (batt_cnt < 29) {
 		batt_array[batt_cnt] = getBatteryVoltage();
 		vreff_array[batt_cnt] = getRefVoltage();
 		batt_cnt++;
@@ -237,25 +241,20 @@ void measureBatteryVoltage() {
 
 		temp = 0;
 		temp2 = 0;
-		for(i = 0; i < 59; i++) {
+		for(i = 0; i < 29; i++) {
 			temp += batt_array[i];
 			temp2 += vreff_array[i];
 		}
 
-		voltage_ref_val = temp2 / 59 + temp2 % 59;
-		batt_val = temp / 59 + temp % 59;
+		voltage_ref_val = temp2 / 29 + temp2 % 29;
+		batt_val = temp / 29 + temp % 29;
 
-		temp = (uint32_t)(get_batt_voltage() * 10);
-		svpSGlobal.battString[0] = ' ';
-		svpSGlobal.battString[1] = temp / 10 + 48;
-		svpSGlobal.battString[2] = '.';
-		svpSGlobal.battString[3] = temp % 10 + 48;
-		svpSGlobal.battString[4] = 'V';
-		svpSGlobal.battString[5] = 0;
+		batt_measured_flag = 1;
 
-		svpSGlobal.battPercentage = get_batt_percent();
 		batt_cnt = 0;
 	}
+
+	oldBattState = svpSGlobal.pwrType;
 }
 
 /*=========================== The SysTick Monster ===========================*/

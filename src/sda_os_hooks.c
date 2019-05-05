@@ -231,3 +231,19 @@ void svs_hardErrHandler() {
 	HAL_NVIC_SystemReset();
 	while(1);
 }
+
+extern volatile uint8_t batt_measured_flag;
+float get_batt_voltage();
+
+uint8_t sda_is_battery_measured() {
+  if (batt_measured_flag == 1) {
+  	batt_measured_flag = 0;
+  	return 1;
+  } else {
+  	return 0;
+  }
+}
+
+float sda_get_battery_voltage() {
+  return get_batt_voltage();
+}
