@@ -86,7 +86,16 @@ void sda_sleep() {
 	if(cpuClkLowFlag == 0){
 		system_clock_set_low();
 	}
-	rtc_set_1s_wkup();
+	//rtc_set_wkup(1000);
+
+	if (svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_LOW) {
+		rtc_set_wkup(128);
+	} else if (svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_NORMAL) {
+		rtc_set_wkup(1000);
+	} else 	if (svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_DEEP) {
+		rtc_set_wkup(8000);
+	}
+
 	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET);
 	// enter sleep state
 	HAL_SuspendTick();
@@ -541,8 +550,10 @@ int main() {
 		// Sleep mode handling
 		if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0 && sdaWakeupFlag == 0) {
 			tick_lock = SDA_LOCK_LOCKED;
-			// SDA wil go to sleep for about a 1s, then RTC or PWRBUTTON wakes it up
+			//printf("going sleep %u\n", svpSGlobal.powerSleepMode);// SDA wil go to sleep for about a 1s, then RTC or PWRBUTTON wakes it up
+
 			sda_sleep();
+			//printf("wake from sleep\n");
 			// update time
 			rtc_update_struct();
 			sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);

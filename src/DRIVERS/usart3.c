@@ -1,4 +1,5 @@
 #include "usart3.h"
+//#define USART3_DBG
 
 extern UART_HandleTypeDef huart3;
 extern volatile uint8_t sdaSerialEnabled;
@@ -18,7 +19,9 @@ void MX_USART3_UART_Init(void) {
   {
     //Error_Handler();
   }
+#ifdef USART3_DBG
   printf("usart3 init ok\n");
+#endif
 }
 
 void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle) {
@@ -43,13 +46,14 @@ void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle) {
 	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
 	GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
+#ifdef USART3_DBG
 	printf("usart3 GPIO init ok\n");
 
 	//HAL_NVIC_SetPriority(USART3_IRQn, 0x0C, 5);
 	//HAL_NVIC_EnableIRQ(USART3_IRQn);
 
 	printf("usart3 NVIC init ok\n");
+#endif
 
 }
 

@@ -39,7 +39,7 @@ extern rtcTimeDate rtc;
 
 void rtc_init();
 void rtc_update_struct();
-void rtc_set_1s_wkup();
+void rtc_set_wkup(uint32_t ms);
 void rtc_set_time(
 									uint16_t year,
 									uint8_t  day,

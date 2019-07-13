@@ -148,7 +148,7 @@ void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
 	HAL_RTCEx_DeactivateWakeUpTimer(&RtcHandle);
 }
 
-void rtc_set_1s_wkup() {
+void rtc_set_wkup(uint32_t ms) {
 	// 2000 = 1s
-	HAL_RTCEx_SetWakeUpTimer_IT(&RtcHandle, 2000, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+	HAL_RTCEx_SetWakeUpTimer_IT(&RtcHandle, 2*ms, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 }
