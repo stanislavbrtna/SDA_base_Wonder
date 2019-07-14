@@ -60,6 +60,7 @@ typedef enum {UNKNOWN, REV1, REV2B} wonderBoardRevisions;
 #include "DRIVERS/usart3.h"
 #include "DRIVERS/speaker.h"
 #include "SDA_OS/SDA_OS.h"
+#include "hw_misc.h"
 
 void sda_platform_gpio_init();
 void SystemClock_Config();
