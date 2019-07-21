@@ -138,6 +138,7 @@ void SysTick_Handler(void) {
 
 	HAL_IncTick();
 	svsLoadCounter++;
+	svpSGlobal.uptimeMs++;
 
 	static uint8_t pwrBtnPrev;
 
