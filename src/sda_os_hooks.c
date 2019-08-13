@@ -25,9 +25,16 @@ void sda_set_led(uint8_t set) {
 	}
 }
 
-//TODO: fix expansion serial port
 uint8_t sda_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 	return uart3_recieve(str, len, timeout);
+}
+
+uint8_t sda_usb_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
+  return uart2_recieve(str, len, timeout);
+}
+
+void sda_usb_serial_transmit(uint8_t *str, uint32_t len) {
+  uart2_transmit(str, len);
 }
 
 void sda_serial_transmit(uint8_t *str, uint32_t len) {
@@ -63,6 +70,18 @@ void sda_dbg_serial_disable() {
 
 uint8_t sda_dbg_serial_is_enabled() {
 	return sdaDbgSerialEnabled;
+}
+
+void sda_usb_serial_enable() {
+  sda_dbg_serial_enable();
+}
+
+void sda_usb_serial_disable() {
+  sda_dbg_serial_disable();
+}
+
+uint8_t sda_usb_serial_is_enabled() {
+  return sda_dbg_serial_is_enabled();
 }
 
 uint32_t svp_random() {

@@ -50,6 +50,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
+#include "../sda_platform.h"
 
 extern UART_HandleTypeDef huart2;
 
@@ -58,7 +59,8 @@ extern void Error_Handler(void);
 void MX_USART2_UART_Init(void);
 void MX_USART2_UART_DeInit(void);
 void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle);
-
+uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout);
+void uart2_transmit(uint8_t *str, uint32_t len);
 
 #ifdef __cplusplus
 }

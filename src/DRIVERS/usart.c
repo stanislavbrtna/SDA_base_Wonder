@@ -1,6 +1,8 @@
 #include "usart.h"
 
 extern UART_HandleTypeDef huart2;
+extern uint8_t sdaDbgSerialEnabled;
+extern volatile sdaLockState tick_lock;
 
 void MX_USART2_UART_Init(void) {
 
@@ -83,5 +85,58 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle){
     __HAL_RCC_USART2_CLK_DISABLE();
     HAL_GPIO_DeInit(GPIOD, GPIO_PIN_5 | GPIO_PIN_6);
   }
+}
+
+
+void uart2_transmit(uint8_t *str, uint32_t len) {
+  if (!sdaDbgSerialEnabled) {
+    sda_dbg_serial_enable();
+  }
+
+  HAL_UART_Transmit(&huart2, str, len, 1000);
+}
+
+
+uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
+  static uint8_t buff[512];
+  uint32_t tickstart = 0U;
+
+  if (!sdaDbgSerialEnabled) {
+    sda_dbg_serial_enable();
+  }
+
+  for(uint32_t i = 0; i < sizeof(buff); i++) {
+    buff[i] = 0;
+  }
+
+  tickstart = HAL_GetTick();
+
+  uint32_t i = 0;
+  tick_lock = SDA_LOCK_LOCKED;
+  while (i < len) {
+    uint8_t c;
+    if (HAL_UART_Receive(&huart2, &c, sizeof(c), timeout / len) != HAL_OK) {
+      if ( HAL_GetTick() > (tickstart + timeout + 10)) {
+        if(i == 0){
+          tick_lock = SDA_LOCK_UNLOCKED; // enable tick again!
+          return 0;
+        }else{
+          break;
+        }
+      }
+    }else{
+      buff[i] = c;
+      i++;
+    }
+
+  }
+
+  for(i = 0; i < len; i++) {
+    str[i] = buff[i];
+  }
+
+  tick_lock = SDA_LOCK_UNLOCKED;
+
+  return 1;
 }
 #endif
