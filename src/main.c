@@ -366,6 +366,10 @@ int main() {
 			sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
 			// update uptime
 			svpSGlobal.uptime = (uint32_t)svpSGlobal.timestamp - uptimeSleepStart;
+			// update battery state
+			if (svpSGlobal.powerSleepMode != SDA_PWR_MODE_SLEEP_LOW) {
+			  measureBatteryVoltage();
+			}
 			tick_lock = SDA_LOCK_UNLOCKED;
 		}
 
