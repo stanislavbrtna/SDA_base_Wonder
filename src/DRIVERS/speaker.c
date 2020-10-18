@@ -48,23 +48,39 @@ void svp_beep_set_t(uint16_t time) {
 }
 
 void svp_beep_set_pf(uint16_t val) {
+  if (val < 27) {
+    val = 27;
+  }
+  if (val > 20000) {
+    val = 20000;
+  }
 	beep_scaler = val;
-	TIM3->PSC = 1680000/val;
+
+	// auto reload value
+	TIM3->ARR = 20000/val;
 }
 
 void svp_beep_set_def() {
-	beep_scaler = 4600;
+	beep_scaler = 1000;
 	beep_t = 250;
 }
 
 void sda_beep_setup(uint16_t freq) {
 	__TIM3_CLK_ENABLE();
+
+	if (freq < 27) {
+	 freq = 27;
+	}
+	if (freq > 20000){
+	  freq = 20000;
+	}
+
 	HAL_TIM_Base_DeInit(&beeptimer);
 	beeptimer.Instance               = TIM3;
 	beeptimer.Channel                = HAL_TIM_ACTIVE_CHANNEL_4;
-	beeptimer.Init.Prescaler         = 1680000 / freq;
+	beeptimer.Init.Prescaler         = 8400;
 	beeptimer.Init.CounterMode       = TIM_COUNTERMODE_UP;
-	beeptimer.Init.Period            = 200;
+	beeptimer.Init.Period            = 20000/freq;
 	beeptimer.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	beeptimer.Init.RepetitionCounter = 0;
 
