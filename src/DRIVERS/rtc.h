@@ -50,4 +50,7 @@ void rtc_set_time(
 									uint8_t  sec
 									);
 
+void rtc_write_password(uint8_t *pwd);
+uint8_t rtc_read_password(uint8_t *pwd);
+
 #endif

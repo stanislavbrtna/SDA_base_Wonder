@@ -152,3 +152,76 @@ void rtc_set_wkup(uint32_t ms) {
 	// 2000 = 1s
 	HAL_RTCEx_SetWakeUpTimer_IT(&RtcHandle, 2*ms, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
 }
+
+void rtc_write_password(uint8_t *pwd) {
+  __HAL_RTC_WRITEPROTECTION_DISABLE(&RtcHandle);
+  HAL_PWR_EnableBkUpAccess();
+  // Set password added flag
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR0, 1);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR1, pwd[0] << 24 | pwd[1] << 16 | pwd[2] << 8 | pwd[3]);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR2, pwd[4] << 24 | pwd[5] << 16 | pwd[6] << 8 | pwd[7]);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR3, pwd[8] << 24 | pwd[9] << 16 | pwd[10] << 8 | pwd[11]);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR4, pwd[12] << 24 | pwd[13] << 16 | pwd[14] << 8 | pwd[15]);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR5, pwd[16] << 24 | pwd[17] << 16 | pwd[18] << 8 | pwd[19]);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR6, pwd[20] << 24 | pwd[21] << 16 | pwd[22] << 8 | pwd[23]);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR7, pwd[24] << 24 | pwd[25] << 16 | pwd[26] << 8 | pwd[27]);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR8, pwd[28] << 24 | pwd[29] << 16 | pwd[30] << 8 | pwd[31]);
+}
+
+uint8_t rtc_read_password(uint8_t *pwd) {
+  uint32_t val = 0;
+  // detect
+  if (HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR0) == 0) {
+    return 1;
+  }
+  // read
+  val = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR1);
+  pwd[0] = (val & 255 << 24) >> 24;
+  pwd[1] = (val & 255 << 16) >> 16;
+  pwd[2] = (val & 255 << 8) >> 8;
+  pwd[3] = val & 255;
+
+  val = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR2);
+  pwd[4] = (val & 255 << 24) >> 24;
+  pwd[5] = (val & 255 << 16) >> 8;
+  pwd[6] = (val & 255 << 8) >> 16;
+  pwd[7] = val & 255;
+
+  val = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR3);
+  pwd[8] = (val & 255 << 24) >> 24;
+  pwd[9] = (val & 255 << 16) >> 8;
+  pwd[10] = (val & 255 << 8) >> 16;
+  pwd[11] = val & 255;
+
+  val = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR4);
+  pwd[12] = (val & 255 << 24) >> 24;
+  pwd[13] = (val & 255 << 16) >> 8;
+  pwd[14] = (val & 255 << 8) >> 16;
+  pwd[15] = val & 255;
+
+  val = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR5);
+  pwd[16] = (val & 255 << 24) >> 24;
+  pwd[17] = (val & 255 << 16) >> 8;
+  pwd[18] = (val & 255 << 8) >> 16;
+  pwd[19] = val & 255;
+
+  val = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR6);
+  pwd[20] = (val & 255 << 24) >> 24;
+  pwd[21] = (val & 255 << 16) >> 8;
+  pwd[22] = (val & 255 << 8) >> 16;
+  pwd[23] = val & 255;
+
+  val = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR7);
+  pwd[24] = (val & 255 << 24) >> 24;
+  pwd[25] = (val & 255 << 16) >> 8;
+  pwd[26] = (val & 255 << 8) >> 16;
+  pwd[27] = val & 255;
+
+  val = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR8);
+  pwd[28] = (val & 255 << 24) >> 24;
+  pwd[29] = (val & 255 << 16) >> 8;
+  pwd[30] = (val & 255 << 8) >> 16;
+  pwd[31] = val & 255;
+
+  return 0;
+}
