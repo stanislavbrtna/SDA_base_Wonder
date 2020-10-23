@@ -166,6 +166,8 @@ void rtc_write_password(uint8_t *pwd) {
   HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR6, pwd[20] << 24 | pwd[21] << 16 | pwd[22] << 8 | pwd[23]);
   HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR7, pwd[24] << 24 | pwd[25] << 16 | pwd[26] << 8 | pwd[27]);
   HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR8, pwd[28] << 24 | pwd[29] << 16 | pwd[30] << 8 | pwd[31]);
+  //HAL_PWR_DisableBkUpAccess(); //??
+  __HAL_RTC_WRITEPROTECTION_ENABLE(&RtcHandle);
 }
 
 uint8_t rtc_read_password(uint8_t *pwd) {
