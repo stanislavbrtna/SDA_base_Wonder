@@ -368,6 +368,7 @@ int main() {
 			svpSGlobal.uptime = (uint32_t)svpSGlobal.timestamp - uptimeSleepStart;
 			// update battery state
 			if (svpSGlobal.powerSleepMode != SDA_PWR_MODE_SLEEP_LOW) {
+			  tick_lock = SDA_LOCK_LOCKED;
 			  measureBatteryVoltage();
 			}
 			tick_lock = SDA_LOCK_UNLOCKED;
