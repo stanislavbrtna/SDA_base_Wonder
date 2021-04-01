@@ -143,7 +143,7 @@ void backlight_timer_init() {
 
 	blTimer.Instance         = LCD_BL_TIMER;
 	blTimer.Channel          = HAL_TIM_ACTIVE_CHANNEL_2;
-	blTimer.Init.Prescaler   = SystemCoreClock / 200000;
+	blTimer.Init.Prescaler   = SystemCoreClock / 512;
 	blTimer.Init.CounterMode = TIM_COUNTERMODE_UP;
 	blTimer.Init.Period      = 256;
 	blTimer.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
