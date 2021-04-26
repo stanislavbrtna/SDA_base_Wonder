@@ -31,8 +31,8 @@ extern volatile uint32_t batt_val;
 
 extern volatile uint8_t sdaWakeupFlag;
 
-void sda_sleep() {
-  tick_lock = SDA_LOCK_LOCKED;
+
+void sda_sleep() { // should be called when tick is locked
   touchSleep();
   if(cpuClkLowFlag == 0) {
     system_clock_set_low();
@@ -55,7 +55,6 @@ void sda_sleep() {
   HAL_ResumeTick();
   sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
   touchWake();
-  tick_lock = SDA_LOCK_UNLOCKED;
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET);
 }
 

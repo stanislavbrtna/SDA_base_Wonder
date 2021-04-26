@@ -84,9 +84,15 @@ float get_batt_voltage() {
   );*/
 
   if (boardRev == REV2B) {
-    batt_adc_const = (VOLTAGE_REF_VAL_DEF) / (float)voltage_ref_val;
-    ADC_Measurement_const = batt_adc_const;
-    return ( (((float)batt_val) * batt_adc_const) / 0.6); //1.666 is a const of the battery voltage divider
+    // some real weird stuff happened before there was this "catch zero in ref val"
+    // mainly system freezes when writing on keyboard
+    if (voltage_ref_val != 0) {
+      batt_adc_const = (VOLTAGE_REF_VAL_DEF) / (float)voltage_ref_val;
+      ADC_Measurement_const = batt_adc_const;
+      return ( (((float)batt_val) * batt_adc_const) / 0.6); //1.666 is a const of the battery voltage divider
+    } else {
+      return (((float)batt_val) * batt_adc_const);
+    }
   } else if (boardRev == REV1) {
     return (((float)batt_val) * batt_adc_const);
   }
