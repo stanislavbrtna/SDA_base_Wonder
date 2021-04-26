@@ -32,10 +32,6 @@ volatile uint8_t Lcd_off_flag;
 
 volatile uint32_t backlight_scaler;
 
-// led pattern array
-uint8_t led_pattern[10];
-uint16_t led_counter;
-
 volatile uint8_t sdaWakeupFlag;
 
 // battery measurement
@@ -44,11 +40,10 @@ extern volatile float batt_adc_const;
 volatile float ADC_Measurement_const;
 
 void __initialize_hardware(void);
-/*=========================== Local headers =================================*/
+
 void Delay(__IO uint32_t nCount);
 void beep_timer_init();
 void rrand_init();
-
 
 void Delay(__IO uint32_t nCount) {
   for(; nCount != 0; nCount--);
@@ -59,22 +54,14 @@ void Delay(__IO uint32_t nCount) {
 
 void SysTick_Handler(void) {
 	static uint16_t sec;
-
-	static uint8_t led_state;
-	static uint16_t led_cnt;
-
 	static uint8_t oldsec;
 
-	static uint8_t btn[6];
-	static uint8_t btn_old[6];
-
 	static uint8_t powerOnLck;
+  static uint8_t pwrBtnPrev;
 
 	HAL_IncTick();
 	svsLoadCounter++;
 	svpSGlobal.uptimeMs++;
-
-	static uint8_t pwrBtnPrev;
 
 	if (Lcd_on_flag > 1){
 		Lcd_on_flag--;
@@ -131,49 +118,9 @@ void SysTick_Handler(void) {
 		sdaWakeupFlag = 0; // button was handled
 		pwrBtnPrev = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
 
-		tick_update_buttons(btn);
-		uint8_t i;
-		for (i = 0; i < 6; i++) {
-			if (svpSGlobal.keyEv[i] == EV_NONE) {
-				if ((btn[i] == 1) && (btn_old[i] == 0)) {
-					svpSGlobal.keyEv[i] = EV_PRESSED;
-					svpSGlobal.btnFlag = 1;
-				}
+		tick_update_buttons();
 
-				if ((btn[i] == 1) && (btn_old[i] == 1)) {
-					svpSGlobal.keyEv[i] = EV_HOLD;
-					svpSGlobal.btnFlag = 1;
-				}
-
-				if ((btn[i] == 0) && (btn_old[i] == 1)) {
-					svpSGlobal.keyEv[i] = EV_RELEASED;
-					svpSGlobal.btnFlag = 1;
-				}
-
-				btn_old[i] = btn[i];
-			}
-		}
-
-		if (led_cnt < 100) {
-			led_cnt++;
-		} else {
-			led_cnt = 0;
-			//práce s patternem ledky
-			if (led_pattern[led_counter] != led_state) {
-				if (led_pattern[led_counter] == 1) {
-					HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
-					led_state = 1;
-				} else {
-					HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
-					led_state = 0;
-				}
-			}
-			if (led_counter < 9) {
-				led_counter++;
-			} else {
-				led_counter = 0;
-			}
-		}
+		tick_update_status_led();
 
 		if (irq_lock == SDA_LOCK_UNLOCKED) {
 			irq_lock = SDA_LOCK_LOCKED;

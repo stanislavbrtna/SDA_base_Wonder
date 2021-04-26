@@ -15,7 +15,10 @@ volatile uint32_t voltage_ref_val;
 volatile float batt_adc_const;
 
 
-void tick_update_buttons(uint8_t *btn) {
+void tick_update_buttons() {
+  static uint8_t btn[6];
+  static uint8_t btn_old[6];
+
   if(HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET) {
     btn[0] = 1;
   } else {
@@ -45,6 +48,28 @@ void tick_update_buttons(uint8_t *btn) {
     btn[5] = 1;
   } else {
     btn[5] = 0;
+  }
+
+  uint8_t i;
+  for (i = 0; i < 6; i++) {
+    if (svpSGlobal.keyEv[i] == EV_NONE) {
+      if ((btn[i] == 1) && (btn_old[i] == 0)) {
+        svpSGlobal.keyEv[i] = EV_PRESSED;
+        svpSGlobal.btnFlag = 1;
+      }
+
+      if ((btn[i] == 1) && (btn_old[i] == 1)) {
+        svpSGlobal.keyEv[i] = EV_HOLD;
+        svpSGlobal.btnFlag = 1;
+      }
+
+      if ((btn[i] == 0) && (btn_old[i] == 1)) {
+        svpSGlobal.keyEv[i] = EV_RELEASED;
+        svpSGlobal.btnFlag = 1;
+      }
+
+      btn_old[i] = btn[i];
+    }
   }
 }
 
@@ -208,4 +233,36 @@ void lcd_bw_test() {
   LCD_Fill(0x0);
   sda_set_led(1);
   LCD_setDrawArea(0, 0, 319, 479);
+}
+
+
+// led pattern array
+uint8_t led_pattern[10];
+uint16_t led_counter;
+
+
+void tick_update_status_led() {
+  static uint8_t led_state;
+  static uint16_t led_cnt;
+
+  if (led_cnt < 100) {
+    led_cnt++;
+  } else {
+    led_cnt = 0;
+    //práce s patternem ledky
+    if (led_pattern[led_counter] != led_state) {
+      if (led_pattern[led_counter] == 1) {
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
+        led_state = 1;
+      } else {
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+        led_state = 0;
+      }
+    }
+    if (led_counter < 9) {
+      led_counter++;
+    } else {
+      led_counter = 0;
+    }
+  }
 }
