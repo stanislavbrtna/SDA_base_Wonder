@@ -59,6 +59,7 @@ typedef enum {UNKNOWN, REV1, REV2B} wonderBoardRevisions;
 #include "DRIVERS/usart.h"
 #include "DRIVERS/usart3.h"
 #include "DRIVERS/speaker.h"
+#include "DRIVERS/power_management.h"
 #include "SDA_OS/SDA_OS.h"
 #include "hw_misc.h"
 

@@ -165,7 +165,6 @@ void measureBatteryVoltage() {
   oldBattState = svpSGlobal.pwrType;
 }
 
-// init misc
 
 void show_splash() {
   if (svp_fexists((uint8_t *) "splash.p16")) {

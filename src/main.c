@@ -23,7 +23,7 @@ volatile sdaLockState tick_lock;   // disables all systick stuff
 
 // systick globals
 volatile uint32_t counter;
-volatile uint16_t svsCounter;
+volatile uint16_t sdaAppCounter;
 volatile uint16_t svsLoadCounter;
 
 volatile uint8_t serialBuf[16];
@@ -38,13 +38,10 @@ uint16_t led_counter;
 
 volatile uint8_t sdaWakeupFlag;
 
-volatile uint8_t cpuClkLowFlag; // for the current state of the CPU speed
-
-volatile float ADC_Measurement_const;
-
 // battery measurement
 extern volatile uint32_t batt_val;
 extern volatile float batt_adc_const;
+volatile float ADC_Measurement_const;
 
 void __initialize_hardware(void);
 /*=========================== Local headers =================================*/
@@ -55,69 +52,6 @@ void rrand_init();
 
 void Delay(__IO uint32_t nCount) {
   for(; nCount != 0; nCount--);
-}
-
-
-void sda_sleep() {
-	tick_lock = SDA_LOCK_LOCKED;
-	touchSleep();
-	if(cpuClkLowFlag == 0){
-		system_clock_set_low();
-	}
-
-	if (svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_LOW) {
-		rtc_set_wkup(128);
-	} else if (svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_NORMAL) {
-		rtc_set_wkup(1000);
-	} else 	if (svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_DEEP) {
-		rtc_set_wkup(8000);
-	}
-
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET);
-	// enter sleep state
-	HAL_SuspendTick();
-  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-  HAL_ResumeTick();
-  sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
-  touchWake();
-  tick_lock = SDA_LOCK_UNLOCKED;
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET);
-
-}
-
-
-/*===========================================================================*/
-void EXTI0_IRQHandler(void) {
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
-}
-
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	(void) (GPIO_Pin);
-	if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0) {
-		sdaWakeupFlag = 1;
-	}
-}
-
-
-void lowBattCheckAndHalt() {
-	if (((uint32_t)(get_batt_voltage() * 10) < 31) && (svpSGlobal.pwrType == POWER_BATT) && (batt_val != 0)) {
-		while(1) {
-			tick_lock = SDA_LOCK_LOCKED;
-			LCD_Fill(LCD_MixColor(255, 0, 0));
-			LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"Low battery!");
-			Delay(90000000);
-			svp_set_lcd_state(LCD_OFF);
-			sda_set_led(0);
-			lcd_hw_sleep();
-			HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-			update_power_status();
-			if (svpSGlobal.pwrType == POWER_USB) {
-				HAL_NVIC_SystemReset();
-				while(1);
-			}
-		}
-	}
 }
 
 
@@ -281,8 +215,8 @@ void SysTick_Handler(void) {
 		}
 
 		// counter for use inside SVS apps
-		if (svsCounter > 0) {
-			svsCounter--;
+		if (sdaAppCounter > 0) {
+			sdaAppCounter--;
 		}
 	}
 }
