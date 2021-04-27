@@ -4,8 +4,6 @@
 extern volatile wonderBoardRevisions boardRev;
 extern volatile float ADC_Measurement_const;
 
-extern uint32_t uptimeSleepStart;
-
 // battery measurement
 uint16_t batt_array[60];
 uint16_t vreff_array[60];
@@ -98,29 +96,6 @@ float get_batt_voltage() {
   }
 
   return 0;
-}
-
-
-void update_power_status() {
-  if (boardRev == REV1) {
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_SET) {
-      svpSGlobal.pwrType = POWER_USB;
-    } else {
-      svpSGlobal.pwrType = POWER_BATT;
-    }
-  } else {
-    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_7) == GPIO_PIN_SET) {
-      svpSGlobal.pwrType = POWER_USB;
-    } else {
-      svpSGlobal.pwrType = POWER_BATT;
-    }
-  }
-}
-
-
-void sda_hw_sleep() {
-  uptimeSleepStart = (uint32_t) svpSGlobal.timestamp - svpSGlobal.uptime;
-  lcd_hw_sleep();
 }
 
 

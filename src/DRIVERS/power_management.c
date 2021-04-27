@@ -21,6 +21,7 @@ SOFTWARE.
 */
 
 #include "power_management.h"
+extern volatile wonderBoardRevisions boardRev;
 
 volatile uint8_t cpuClkLowFlag; // for the current state of the CPU speed
 
@@ -30,6 +31,8 @@ extern volatile uint8_t Lcd_off_flag;
 extern volatile uint32_t batt_val;
 
 extern volatile uint8_t sdaWakeupFlag;
+
+extern uint32_t uptimeSleepStart;
 
 
 void sda_sleep() { // should be called when tick is locked
@@ -90,4 +93,27 @@ void lowBattCheckAndHalt() {
       }
     }
   }
+}
+
+
+void update_power_status() {
+  if (boardRev == REV1) {
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_SET) {
+      svpSGlobal.pwrType = POWER_USB;
+    } else {
+      svpSGlobal.pwrType = POWER_BATT;
+    }
+  } else {
+    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_7) == GPIO_PIN_SET) {
+      svpSGlobal.pwrType = POWER_USB;
+    } else {
+      svpSGlobal.pwrType = POWER_BATT;
+    }
+  }
+}
+
+
+void sda_hw_sleep() {
+  uptimeSleepStart = (uint32_t) svpSGlobal.timestamp - svpSGlobal.uptime;
+  lcd_hw_sleep();
 }
