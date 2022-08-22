@@ -97,10 +97,10 @@ void rtc_update_struct() {
 	rtc.month   = sdatestructureget.Month;
 	rtc.year    = 2000 + (uint16_t)sdatestructureget.Year;
 
-	// if yoear is 2000 (stm32 rtc default), some sane defaults will be set:
+	// if year is 2000 (stm32 rtc default), some sane defaults will be set:
 	if (rtc.year == 2000) {
-	  rtc_set_time(2018, 1, 1, 1, 0, 0, 0);
-	  rtc.year = 2018;
+	  rtc_set_time(2022, 1, 1, 1, 0, 0, 0);
+	  rtc.year = 2022;
 	}
 }
 
