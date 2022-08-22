@@ -241,6 +241,11 @@ uint16_t svp_strlen(uint8_t *str) {
 }
 
 uint8_t svp_chdir(uint8_t* path) {
+  // remove slash on the end of path
+  if (path[svp_strlen(path - 1)] == '/' && svp_strlen(path - 1) != 0) {
+    path[svp_strlen(path - 1)] = 0;
+  }
+
   f_chdir((char *)path);
   return 0;
 }

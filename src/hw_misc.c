@@ -72,6 +72,7 @@ void tick_update_buttons() {
 }
 
 
+
 float get_batt_voltage() {
   // get current conversion constant
   /*printf("measuring: ref: %u, const: %u, battAdcVal: %u voltage:%u\n",
