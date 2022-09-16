@@ -31,11 +31,12 @@ SOFTWARE.
 #define TOUCH_TOUCH_H_
 
 typedef struct {
-	float a;
-	float b;
-	float c;
-	float d;
-	float e;
+  float cx;
+  float cy;
+	float a[4];
+	float b[4];
+	float c[4];
+	float d[4];
 } touchCalibDataStruct;
 
 #include "../sda_platform.h"

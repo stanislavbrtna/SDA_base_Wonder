@@ -260,14 +260,8 @@ uint16_t getRefVoltage() {
 void touchInit() {
 	touchAdcInit();
 
-	// defaults for calibration
-	touchCalibData.a = 0.116;
-	touchCalibData.b = -75;
-
-	touchCalibData.c = 0.156;
-	touchCalibData.d = -75;
-
-	touchCalibData.e = +0.05;
+	// todo: add sane calibration defaults to the
+	// touchCalibData struct
 }
 
 void touchSleep() {
@@ -426,38 +420,36 @@ uint8_t touch_read_xy_m30(touchXY *result) {
 
 uint8_t touch_get_xy(touchXY *result) {
 	touchXY res;
-	float a, b, c, d, e;
+	uint8_t i = 0;
 
-	a = touchCalibData.a;
-	b = touchCalibData.b;
-	c = touchCalibData.c;
-	d = touchCalibData.d;
-	e = touchCalibData.e;
-
-	// načtem a pokud dotyk, tak počkáme
-	if (touch_read_xy_m30(&res)) {
+	// read touch
+	if (touch_read_xy(&res)) {
 		touch_delay(300000);
-		// načteme dotyk po uklidnění displeje
+		// wait for it to stabilize
 		if (touch_read_xy_m30(&res)) {
 
-			// hlavní výpočet
-			result->x = a * res.x + b;
-			result->y = c * res.y + d;
+			// get the values
+		  if ((res.x < touchCalibData.cx) && (res.y < touchCalibData.cy)) {
+		    i = 0;
+		  }
 
-			// fix horní část lcd
-			if ((result->y > 0) && (result->y < 140)) {
-				result->y = c * res.y + e * result->x + d;
-#ifdef TOUCH_DBG
-				printf("Touch: Additional fix area\n");
-#endif
-			}
-			#ifdef TOUCH_DBG
-				else
-				printf("Touch: Normal area\n");
-			#endif
+		  if ((res.x > touchCalibData.cx) && (res.y < touchCalibData.cy)) {
+		    i = 1;
+		  }
+
+		  if ((res.x < touchCalibData.cx) && (res.y > touchCalibData.cy)) {
+        i = 2;
+      }
+
+      if ((res.x > touchCalibData.cx) && (res.y > touchCalibData.cy)) {
+        i = 3;
+      }
+
+			result->x = touchCalibData.a[i] * res.x + touchCalibData.b[i];
+			result->y = touchCalibData.c[i] * res.y + touchCalibData.d[i];
 
 
-			//fix limitů
+			// fix limits
 			if (result->y == 0) {
 				result->y = 1;
 			}
@@ -481,22 +473,23 @@ uint8_t touch_get_xy(touchXY *result) {
 			LCD_draw_point_wrp(0xFFFF);
 #endif
 			return 1;
-
 		} else {
 			return 0;
 		}
-
 	} else {
 		return 0;
 	}
 }
 
 void svp_set_calibration_data(touchCalibDataStruct input) {
-	touchCalibData.a = input.a;
-	touchCalibData.b = input.b;
-	touchCalibData.c = input.c;
-	touchCalibData.d = input.d;
-	touchCalibData.e = input.e;
+  touchCalibData.cx = input.cx;
+  touchCalibData.cy = input.cy;
+	for (uint8_t i = 0; i < 4; i++) {
+	  touchCalibData.a[i] = input.a[i];
+	  touchCalibData.b[i] = input.b[i];
+	  touchCalibData.c[i] = input.c[i];
+	  touchCalibData.d[i] = input.d[i];
+	}
 }
 
 // draw the calibration target
@@ -506,81 +499,85 @@ void touch_draw_cpoint(uint16_t x, uint16_t y, uint16_t color) {
 	LCD_DrawRectangle(x - 1, y - 1, x + 1, y + 1, color);
 }
 
-#define CPOINT1_Y 80
+
+/*
+ * calibration points
+ * 0:64x64   1:256x64
+ *
+ *    2:160x240
+ *
+ * 3:64x416  4:256x416
+ * */
+
+// draw all the calibration targets
+void redraw_cpoints(uint8_t active, uint16_t * x_pos, uint16_t * y_pos) {
+  LCD_setDrawArea(0, 0, 319, 479);
+  LCD_Fill(0x0000);
+
+  for(uint8_t i = 0; i < 5; i++){
+    if (i == active) {
+      touch_draw_cpoint(x_pos[i], y_pos[i], LCD_MixColor(255, 0, 0));
+    } else {
+      touch_draw_cpoint(x_pos[i], y_pos[i], 0xFFFF);
+    }
+  }
+}
 
 // Calibration routine
 void sda_calibrate () {
 	touchXY res;
-	float rx1, ry1, rx2, ry2;
-	float a, b, c, d, e;
+	float rx[5];
+	float ry[5];
+	uint16_t i = 0;
+	touchCalibDataStruct t;
+
+	uint16_t x_pos[5] = {64, 256, 160, 64, 256};
+	uint16_t y_pos[5] = {64, 64, 240, 416, 416};
 
 	while (1) {
-		LCD_setDrawArea(0, 0, 319, 479);
-		LCD_Fill(0x0000);
 
-		touch_draw_cpoint(40, CPOINT1_Y, LCD_MixColor(255, 0, 0));
+	  // get data
+	  for (i = 0; i < 5; i++) {
+	    redraw_cpoints(i, x_pos, y_pos);
+	    while (touch_read_xy_m30(&res) == 0);
+      touch_delay(300000);
+      touch_read_xy_m30(&res);
+      rx[i] = (float) res.x;
+      ry[i] = (float) res.y;
 
-		touch_draw_cpoint(280, 440, 0xFFFF);
+      if (i == 2) {
+        t.cx = res.x;
+        t.cy = res.y;
+      }
 
-		touch_draw_cpoint(120, 40, 0xFFFF);
+      while (touch_read_xy_m30(&res) == 1);
+      touch_delay(300000);
+	  }
 
-		// RX1
-		while (touch_read_xy_m30(&res) == 0);
-		touch_delay(300000);
-		touch_read_xy_m30(&res);
-		rx1 = (float) res.x;
-		ry1 = (float) res.y;
+	  // compute
+	  t.c[0] = (y_pos[2] - y_pos[0]) / (ry[2] - ry[0]);
+	  t.a[0] = (x_pos[2] - x_pos[0]) / (rx[2] - rx[0]);
+	  t.b[0] = x_pos[0] - t.a[0] * rx[0];
+	  t.d[0] = y_pos[2] - t.c[0] * ry[2];
 
-		while (touch_read_xy_m30(&res) == 1);
-		touch_delay(300000);
 
-		// RX2
-		touch_draw_cpoint(40, CPOINT1_Y, 0xFFFF);
+	  t.c[1] = (y_pos[2] - y_pos[1]) / (ry[2] - ry[1]);
+    t.a[1] = (x_pos[1] - x_pos[2]) / (rx[1] - rx[2]);
+    t.b[1] = x_pos[1] - t.a[1] * rx[1];
+    t.d[1] = y_pos[2] - t.c[1] * ry[2];
 
-		touch_draw_cpoint(280, 440, LCD_MixColor(255, 0, 0));
+    t.c[2] = (y_pos[3] - y_pos[2]) / (ry[3] - ry[2]);
+    t.a[2] = (x_pos[2] - x_pos[3]) / (rx[2] - rx[3]);
+    t.b[2] = x_pos[3] - t.a[2] * rx[3];
+    t.d[2] = y_pos[2] - t.c[2] * ry[2];
 
-		while (touch_read_xy_m30(&res) == 0);
-		touch_delay(300000);
-		touch_read_xy_m30(&res);
-		rx2 = (float) res.x;
-		ry2 = (float) res.y;
+    t.c[3] = (y_pos[4] - y_pos[2]) / (ry[4] - ry[2]);
+    t.a[3] = (x_pos[4] - x_pos[2]) / (rx[4] - rx[2]);
+    t.b[3] = x_pos[4] - t.a[3] * rx[4];
+    t.d[3] = y_pos[2] - t.c[3] * ry[2];
 
-		// compute
-		c = (440 - CPOINT1_Y) / (ry2 - ry1);
-		a = (280 - 40) / (rx2 - rx1);
-
-		b = 40 - a * rx1;
-		d = CPOINT1_Y - c * ry1;
-
-		while (touch_read_xy_m30(&res) == 1);
-		touch_delay(300000);
-
-		// E
-		touch_draw_cpoint(280, 440, 0xFFFF);
-
-		touch_draw_cpoint(120, 40, LCD_MixColor(255, 0, 0));
-
-		while (touch_read_xy_m30(&res) == 0);
-		touch_delay(300000);
-		touch_read_xy_m30(&res);
-		rx1 = (float) res.x;
-		ry1 = (float) res.y;
-
-		e = (40 - c * ry1 - d) / rx1;
-
-		printf("calibration done: \n a:%u\n b:%u\n c:%u\n d:%u\n e:%u \n",
-				(uint16_t)(a * 1000),
-				(uint16_t)(b * -1),
-				(uint16_t)(c * 1000),
-				(uint16_t)(d * -1),
-				(uint16_t)(e * 1000)
-		);
-
-		touchCalibData.a = a;
-		touchCalibData.b = b;
-		touchCalibData.c = c;
-		touchCalibData.d = d;
-		touchCalibData.e = e;
+	  // set the new calibration data
+	  svp_set_calibration_data(t);
 
 		LCD_Fill(0x0000);
 #ifndef LANG_VAL
@@ -603,7 +600,7 @@ void sda_calibrate () {
 #endif
 
 #endif
-
+		// test it
 		while (1) {
 			if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET) {
 				break;
@@ -611,6 +608,7 @@ void sda_calibrate () {
 			if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_SET) {
 				return;
 			}
+			// by showing a point where we touch
 			if(touch_get_xy(&res)) {
 				LCD_DrawPoint(res.x, res.y, 0xFFF);
 			}
