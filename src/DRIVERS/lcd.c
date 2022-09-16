@@ -287,13 +287,13 @@ void lcd_Init_Seq_9486(){
 		lcd_send_data(0x48);
 
 	lcd_send_cmd_d(0x11);                     // sleep out
-		lcd_Delay(150);
+	lcd_Delay(150);
 
-		lcd_send_cmd_d(0x29);                     // display on
-		lcd_Delay(150);
+	lcd_send_cmd_d(0x29);                     // display on
+	lcd_Delay(150);
 }
 
-void lcd_Init_Seq_9481_b(){
+void lcd_Init_Seq_9481_b() {
 
 	lcd_set_RST_low();
 	lcd_Delay(300);

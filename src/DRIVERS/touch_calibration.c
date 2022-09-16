@@ -25,6 +25,7 @@ SOFTWARE.
 touchCalibDataStruct touchCalibData;
 uint8_t calibrationFlag;
 
+static void touch_delay(__IO uint32_t nCount);
 
 void sda_setLcdCalibrationFlag(uint8_t val) {
   calibrationFlag = val;
@@ -39,7 +40,6 @@ uint8_t svp_getLcdCalibrationFlag() {
 static void touch_delay(__IO uint32_t nCount) {
   for(; nCount != 0; nCount--);
 }
-
 
 // Returns median of 30 subsequent touch screen readouts
 uint8_t touch_read_xy_m30(touchXY *result) {

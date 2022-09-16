@@ -26,10 +26,8 @@ SOFTWARE.
 
 extern ADC_HandleTypeDef g_AdcHandle;
 extern ADC_HandleTypeDef g_AdcHandle2;
-
-
-static void touch_delay(__IO uint32_t nCount);
 static void touchAdcInit(void);
+
 
 void touchInit() {
   touchAdcInit();
@@ -252,7 +250,7 @@ uint16_t getRefVoltage() {
 
 void touchSleep() {
 	__ADC1_CLK_DISABLE();
-		__ADC2_CLK_DISABLE();
+	__ADC2_CLK_DISABLE();
 }
 
 
@@ -321,9 +319,6 @@ uint8_t touch_read_adc_xy(touchXY *result) {
 
 	if (HAL_ADC_PollForConversion(&g_AdcHandle, 1000000) == HAL_OK) {
 		y = HAL_ADC_GetValue(&g_AdcHandle);
-	} else {
-	  HAL_ADC_Stop(&g_AdcHandle);
-	  return 0;
 	}
 	HAL_ADC_Stop(&g_AdcHandle);
 
@@ -337,10 +332,7 @@ uint8_t touch_read_adc_xy(touchXY *result) {
 
 	if (HAL_ADC_PollForConversion(&g_AdcHandle2, 1000000) == HAL_OK) {
 		x = HAL_ADC_GetValue(&g_AdcHandle2);
-	} else {
-    HAL_ADC_Stop(&g_AdcHandle2);
-    return 0;
-  }
+	}
 	HAL_ADC_Stop(&g_AdcHandle2);
 
 	result->x = x;
