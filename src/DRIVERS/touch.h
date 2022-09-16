@@ -67,4 +67,6 @@ uint16_t getBatteryVoltage();
 uint16_t getRefVoltage();
 #endif
 
+uint8_t touch_read_adc_xy(touchXY *result);
+
 #endif /* TOUCH_TOUCH_H_ */
