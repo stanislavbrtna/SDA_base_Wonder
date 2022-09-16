@@ -53,4 +53,7 @@ void rtc_set_time(
 void rtc_write_password(uint8_t *pwd);
 uint8_t rtc_read_password(uint8_t *pwd);
 
+uint32_t rtc_read_locked();
+void rtc_write_locked(uint32_t val);
+
 #endif

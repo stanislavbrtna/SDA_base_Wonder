@@ -170,6 +170,17 @@ void rtc_write_password(uint8_t *pwd) {
   __HAL_RTC_WRITEPROTECTION_ENABLE(&RtcHandle);
 }
 
+void rtc_write_locked(uint32_t val) {
+  __HAL_RTC_WRITEPROTECTION_DISABLE(&RtcHandle);
+    HAL_PWR_EnableBkUpAccess();
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_DR9, val);
+  __HAL_RTC_WRITEPROTECTION_ENABLE(&RtcHandle);
+}
+
+uint32_t rtc_read_locked() {
+  return HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_DR9);
+}
+
 uint8_t rtc_read_password(uint8_t *pwd) {
   uint32_t val = 0;
   // detect
