@@ -26,7 +26,20 @@ void sda_set_led(uint8_t set) {
 }
 
 uint8_t sda_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
-	return uart3_recieve(str, len, timeout);
+  return uart3_recieve(str, len, timeout);
+}
+
+// interrupt enabled functions:
+uint8_t sda_serial_recieve_init() {
+  return uart3_recieve_IT();
+}
+
+uint8_t sda_serial_get_rdy() {
+  return uart3_get_rdy();
+}
+
+uint8_t sda_serial_get_str(uint8_t *str) {
+  return uart3_get_str(str);
 }
 
 uint8_t sda_usb_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {

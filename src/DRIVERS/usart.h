@@ -62,6 +62,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle);
 uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout);
 void uart2_transmit(uint8_t *str, uint32_t len);
 
+void HAL_USART_RxCpltCallback(USART_HandleTypeDef *husart);
+
 #ifdef __cplusplus
 }
 #endif

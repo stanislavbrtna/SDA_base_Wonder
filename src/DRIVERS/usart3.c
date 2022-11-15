@@ -15,6 +15,8 @@ void MX_USART3_UART_Init(void) {
   huart3.Init.Mode = UART_MODE_TX_RX;
   huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+
+
   if (HAL_UART_Init(&huart3) != HAL_OK)
   {
     //Error_Handler();
@@ -33,6 +35,7 @@ void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle) {
 	/* Peripheral clock enable */
 	__HAL_RCC_USART3_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
+
 	/**USART2 GPIO Configuration
 	PB10     ------> USART2_TX
 	PB11     ------> USART2_RX
@@ -46,14 +49,8 @@ void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle) {
 	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
 	GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-#ifdef USART3_DBG
-	printf("usart3 GPIO init ok\n");
-
-	//HAL_NVIC_SetPriority(USART3_IRQn, 0x0C, 5);
-	//HAL_NVIC_EnableIRQ(USART3_IRQn);
-
-	printf("usart3 NVIC init ok\n");
-#endif
+	HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(USART3_IRQn);
 
 }
 
@@ -132,3 +129,111 @@ uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 
 	return 1;
 }
+
+
+/* IT receive API, usage:
+
+  uint8_t buff[512];
+
+  uart3_recieve_IT();
+
+  while(1) {
+    if (uart3_get_rdy() == 2) {
+      uart3_get_str(&buff);
+      printf("got: %s\n", buff);
+    } else {
+      //printf("none\n");
+    }
+  }
+*/
+
+
+static uint8_t usart3_buff[512];
+static volatile uint16_t usart3_buff_n;
+static volatile uint8_t usart3_c[10];
+static volatile uint8_t usart3_DR;
+
+uint8_t uart3_recieve_IT() {
+
+  usart3_c[1] = 0;
+  usart3_DR = 0;
+  usart3_buff_n = 0;
+
+  if (!sdaSerialEnabled) {
+    sda_serial_enable();
+  }
+
+  for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
+    usart3_buff[i] = 0;
+  }
+
+  printf("serial setup:");
+
+  HAL_StatusTypeDef h;
+  h = HAL_UART_Receive_IT(&huart3, usart3_c, 1);
+
+  if(h == HAL_ERROR) {
+    printf("serial rcv init error\n");
+    return 0;
+  }
+
+  if(h == HAL_BUSY) {
+    printf("serial rcv init error busy\n");
+    return 0;
+  }
+
+  tick_lock = SDA_LOCK_UNLOCKED;
+  return 1;
+}
+
+
+uint8_t uart3_get_rdy() {
+  return usart3_DR;
+}
+
+
+uint8_t uart3_get_str(uint8_t *str) {
+  if (usart3_DR) {
+    HAL_NVIC_DisableIRQ(USART3_IRQn);
+    for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
+      str[i] = usart3_buff[i];
+    }
+
+    usart3_DR = 0;
+    usart3_buff_n = 0;
+    usart3_c[0] = 0;
+    for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
+      usart3_buff[i] = 0;
+    }
+    HAL_NVIC_EnableIRQ(USART3_IRQn);
+
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+
+void USART3_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart3);
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  if (huart->Instance == USART3) {
+
+      usart3_buff[usart3_buff_n] = usart3_c[0];
+      usart3_buff_n++;
+      if (usart3_buff_n > sizeof(usart3_buff) - 1) {
+        usart3_buff_n = 0;
+      }
+      if (usart3_c[0] == '\n') {
+        usart3_DR = 2;
+      } else {
+        usart3_DR = 1;
+      }
+    HAL_UART_Receive_IT(&huart3, usart3_c, 1);
+  }
+}
+
