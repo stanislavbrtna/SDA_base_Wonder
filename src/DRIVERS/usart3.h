@@ -16,7 +16,8 @@ void uart3_transmit(uint8_t *str, uint32_t len);
 
 uint8_t uart3_recieve_IT();
 uint8_t uart3_get_rdy();
-uint8_t uart3_get_str(uint8_t *str);
+uint16_t uart3_get_str(uint8_t *str); // return: len
+
 #endif 
 
 

@@ -7,7 +7,7 @@ extern volatile sdaLockState tick_lock;
 void MX_USART2_UART_Init(void) {
 
   huart2.Instance = USART2;
-  HAL_UART_DeInit (&huart2);
+  HAL_UART_DeInit(&huart2);
 
   huart2.Init.BaudRate     = 9600;
   huart2.Init.WordLength   = UART_WORDLENGTH_8B;
@@ -71,6 +71,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle) {
 		HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET);
+
+		HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+		HAL_NVIC_EnableIRQ(USART2_IRQn);
   }
 }
 
@@ -140,3 +143,78 @@ uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
   return 1;
 }
 #endif
+
+uint8_t usart2_buff[512];
+volatile uint16_t usart2_buff_n;
+volatile uint8_t usart2_c[10];
+volatile uint8_t usart2_DR;
+
+uint8_t uart2_recieve_IT() {
+
+  usart2_c[1] = 0;
+  usart2_DR = 0;
+  usart2_buff_n = 0;
+
+  if (!sdaDbgSerialEnabled) {
+    sda_dbg_serial_enable();
+  }
+
+  for(uint32_t i = 0; i < sizeof(usart2_buff); i++) {
+    usart2_buff[i] = 0;
+  }
+
+  HAL_StatusTypeDef h;
+  h = HAL_UART_Receive_IT(&huart2, usart2_c, 1);
+
+  if(h == HAL_ERROR) {
+    printf("serial rcv init error\n");
+    return 0;
+  }
+
+  if(h == HAL_BUSY) {
+    printf("serial rcv init error busy\n");
+    return 0;
+  }
+
+  tick_lock = SDA_LOCK_UNLOCKED;
+  return 1;
+}
+
+
+uint8_t uart2_get_rdy() {
+  return usart2_DR;
+}
+
+
+uint16_t uart2_get_str(uint8_t *str) {
+  uint16_t r = 0;
+  sdaLockState l;
+  if (usart2_DR) {
+    l = tick_lock;
+    tick_lock = SDA_LOCK_LOCKED;
+    HAL_NVIC_DisableIRQ(USART2_IRQn);
+    for(uint32_t i = 0; i < sizeof(usart2_buff); i++) {
+      str[i] = usart2_buff[i];
+    }
+
+    r = usart2_buff_n;
+
+    usart2_DR = 0;
+    usart2_buff_n = 0;
+    usart2_c[0] = 0;
+    for(uint32_t i = 0; i < sizeof(usart2_buff); i++) {
+      usart2_buff[i] = 0;
+    }
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
+    tick_lock = l;
+    return r;
+  } else {
+    return 0;
+  }
+}
+
+
+void USART2_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart2);
+}

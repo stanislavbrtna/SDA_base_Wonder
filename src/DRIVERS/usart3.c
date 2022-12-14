@@ -7,7 +7,7 @@ extern volatile sdaLockState tick_lock;
 
 void MX_USART3_UART_Init(void) {
   huart3.Instance = USART3;
-  HAL_UART_DeInit (&huart3);
+  HAL_UART_DeInit(&huart3);
   huart3.Init.BaudRate = 9600;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
@@ -17,8 +17,7 @@ void MX_USART3_UART_Init(void) {
   huart3.Init.OverSampling = UART_OVERSAMPLING_16;
 
 
-  if (HAL_UART_Init(&huart3) != HAL_OK)
-  {
+  if (HAL_UART_Init(&huart3) != HAL_OK) {
     //Error_Handler();
   }
 #ifdef USART3_DBG
@@ -167,8 +166,6 @@ uint8_t uart3_recieve_IT() {
     usart3_buff[i] = 0;
   }
 
-  printf("serial setup:");
-
   HAL_StatusTypeDef h;
   h = HAL_UART_Receive_IT(&huart3, usart3_c, 1);
 
@@ -192,12 +189,15 @@ uint8_t uart3_get_rdy() {
 }
 
 
-uint8_t uart3_get_str(uint8_t *str) {
+uint16_t uart3_get_str(uint8_t *str) {
+  uint16_t r = 0;
   if (usart3_DR) {
     HAL_NVIC_DisableIRQ(USART3_IRQn);
     for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
       str[i] = usart3_buff[i];
     }
+
+    r = usart3_buff_n;
 
     usart3_DR = 0;
     usart3_buff_n = 0;
@@ -207,7 +207,7 @@ uint8_t uart3_get_str(uint8_t *str) {
     }
     HAL_NVIC_EnableIRQ(USART3_IRQn);
 
-    return 1;
+    return r;
   } else {
     return 0;
   }
@@ -220,6 +220,11 @@ void USART3_IRQHandler(void)
 }
 
 
+extern uint8_t usart2_buff[512];
+extern volatile uint16_t usart2_buff_n;
+extern volatile uint8_t usart2_c[10];
+extern volatile uint8_t usart2_DR;
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart->Instance == USART3) {
 
@@ -227,13 +232,34 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       usart3_buff_n++;
       if (usart3_buff_n > sizeof(usart3_buff) - 1) {
         usart3_buff_n = 0;
+        printf("OVERRUN!\s");
       }
       if (usart3_c[0] == '\n') {
         usart3_DR = 2;
       } else {
-        usart3_DR = 1;
+        if (usart3_DR == 0) {
+          usart3_DR = 1;
+        }
       }
     HAL_UART_Receive_IT(&huart3, usart3_c, 1);
   }
+
+  if (huart->Instance == USART2) {
+
+        usart2_buff[usart2_buff_n] = usart2_c[0];
+        usart2_buff_n++;
+        if (usart2_buff_n > sizeof(usart2_buff) - 1) {
+          usart2_buff_n = 0;
+          printf("OVERRUN!\s");
+        }
+        if (usart2_c[0] == '\n') {
+          usart2_DR = 2;
+        } else {
+          if (usart2_DR == 0) {
+            usart2_DR = 1;
+          }
+        }
+      HAL_UART_Receive_IT(&huart2, usart2_c, 1);
+    }
 }
 

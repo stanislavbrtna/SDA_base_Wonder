@@ -38,7 +38,7 @@ uint8_t sda_serial_get_rdy() {
   return uart3_get_rdy();
 }
 
-uint8_t sda_serial_get_str(uint8_t *str) {
+uint16_t sda_serial_get_str(uint8_t *str) {
   return uart3_get_str(str);
 }
 
@@ -52,6 +52,19 @@ void sda_usb_serial_transmit(uint8_t *str, uint32_t len) {
 
 void sda_serial_transmit(uint8_t *str, uint32_t len) {
 	uart3_transmit(str, len);
+}
+
+// interrupt enabled functions:
+uint8_t sda_usb_serial_recieve_init() {
+  return uart2_recieve_IT();
+}
+
+uint8_t sda_usb_serial_get_rdy() {
+  return uart2_get_rdy();
+}
+
+uint16_t sda_usb_serial_get_str(uint8_t *str) {
+  return uart2_get_str(str);
 }
 
 void sda_serial_enable() {
