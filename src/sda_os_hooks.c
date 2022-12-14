@@ -25,8 +25,31 @@ void sda_set_led(uint8_t set) {
 	}
 }
 
+// Expansion serial port (uart3)
+
+void sda_serial_enable() {
+  sdaSerialEnabled = 1;
+  HAL_UART3_MspInit(&huart3);
+  MX_USART3_UART_Init();
+}
+
+void sda_serial_disable() {
+  HAL_UART_AbortReceive(&huart3);
+  MX_USART3_UART_DeInit();
+  sdaSerialEnabled = 0;
+}
+
+uint8_t sda_serial_is_enabled() {
+  return sdaSerialEnabled;
+}
+
+// blocking functions
 uint8_t sda_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
   return uart3_recieve(str, len, timeout);
+}
+
+void sda_serial_transmit(uint8_t *str, uint32_t len) {
+  uart3_transmit(str, len);
 }
 
 // interrupt enabled functions:
@@ -42,16 +65,42 @@ uint16_t sda_serial_get_str(uint8_t *str) {
   return uart3_get_str(str);
 }
 
+
+// USB serial port (uart2)
+
+void sda_dbg_serial_enable() {
+  HAL_UART_MspInit(&huart2);
+  MX_USART2_UART_Init();
+  sdaDbgSerialEnabled = 1;
+}
+
+void sda_dbg_serial_disable() {
+  sdaDbgSerialEnabled = 0;
+  MX_USART2_UART_DeInit();
+}
+
+uint8_t sda_dbg_serial_is_enabled() {
+  return sdaDbgSerialEnabled;
+}
+
+void sda_usb_serial_enable() {
+  sda_dbg_serial_enable();
+}
+
+void sda_usb_serial_disable() {
+  sda_dbg_serial_disable();
+}
+
+uint8_t sda_usb_serial_is_enabled() {
+  return sda_dbg_serial_is_enabled();
+}
+
 uint8_t sda_usb_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
   return uart2_recieve(str, len, timeout);
 }
 
 void sda_usb_serial_transmit(uint8_t *str, uint32_t len) {
   uart2_transmit(str, len);
-}
-
-void sda_serial_transmit(uint8_t *str, uint32_t len) {
-	uart3_transmit(str, len);
 }
 
 // interrupt enabled functions:
@@ -67,48 +116,6 @@ uint16_t sda_usb_serial_get_str(uint8_t *str) {
   return uart2_get_str(str);
 }
 
-void sda_serial_enable() {
-	sdaSerialEnabled = 1;
-	HAL_UART3_MspInit(&huart3);
-	MX_USART3_UART_Init();
-}
-
-void sda_serial_disable() {
-	HAL_UART_AbortReceive(&huart3);
-	MX_USART3_UART_DeInit();
-	sdaSerialEnabled = 0;
-}
-
-uint8_t sda_serial_is_enabled() {
-	return sdaSerialEnabled;
-}
-
-void sda_dbg_serial_enable() {
-	HAL_UART_MspInit(&huart2);
-	MX_USART2_UART_Init();
-	sdaDbgSerialEnabled = 1;
-}
-
-void sda_dbg_serial_disable() {
-	sdaDbgSerialEnabled = 0;
-	MX_USART2_UART_DeInit();
-}
-
-uint8_t sda_dbg_serial_is_enabled() {
-	return sdaDbgSerialEnabled;
-}
-
-void sda_usb_serial_enable() {
-  sda_dbg_serial_enable();
-}
-
-void sda_usb_serial_disable() {
-  sda_dbg_serial_disable();
-}
-
-uint8_t sda_usb_serial_is_enabled() {
-  return sda_dbg_serial_is_enabled();
-}
 
 uint32_t svp_random() {
 	uint32_t ret = 0;

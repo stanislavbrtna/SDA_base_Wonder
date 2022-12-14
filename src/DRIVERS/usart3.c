@@ -60,10 +60,6 @@ void MX_USART3_UART_DeInit(void){
   
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
 
-    /* Peripheral DMA DeInit*/
-    //HAL_DMA_DeInit(huart3.hdmatx);
-    //HAL_DMA_DeInit(huart3.hdmarx);
-
 }
     
 void HAL_UART3_MspDeInit(UART_HandleTypeDef* uartHandle){
@@ -191,7 +187,10 @@ uint8_t uart3_get_rdy() {
 
 uint16_t uart3_get_str(uint8_t *str) {
   uint16_t r = 0;
+  sdaLockState l;
   if (usart3_DR) {
+    l = tick_lock;
+    tick_lock = SDA_LOCK_LOCKED;
     HAL_NVIC_DisableIRQ(USART3_IRQn);
     for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
       str[i] = usart3_buff[i];
@@ -206,7 +205,7 @@ uint16_t uart3_get_str(uint8_t *str) {
       usart3_buff[i] = 0;
     }
     HAL_NVIC_EnableIRQ(USART3_IRQn);
-
+    tick_lock = l;
     return r;
   } else {
     return 0;
@@ -232,7 +231,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
       usart3_buff_n++;
       if (usart3_buff_n > sizeof(usart3_buff) - 1) {
         usart3_buff_n = 0;
-        printf("OVERRUN!\s");
       }
       if (usart3_c[0] == '\n') {
         usart3_DR = 2;
@@ -250,7 +248,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         usart2_buff_n++;
         if (usart2_buff_n > sizeof(usart2_buff) - 1) {
           usart2_buff_n = 0;
-          printf("OVERRUN!\s");
         }
         if (usart2_c[0] == '\n') {
           usart2_DR = 2;
