@@ -79,8 +79,8 @@ SOFTWARE.
 
 // GR2 hooks
 uint8_t lcd_hw_init();
-void lcd_hw_set_xy(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
-void lcd_hw_Draw_Point(uint16_t color);
+extern inline void lcd_hw_set_xy(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) __attribute__((always_inline));
+extern inline void lcd_hw_Draw_Point(uint16_t color) __attribute__((always_inline));
 
 // SDA_OS hooks:
 void lcd_hw_sleep();
