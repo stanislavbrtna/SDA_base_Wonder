@@ -184,7 +184,7 @@ int main() {
 	sda_platform_gpio_init();
 	sda_dbg_serial_enable();
 
-	printf("SDA-WONDER\nStanda 2019\n\n");
+	printf("SDA-WONDER\nStanda 2019-2022\n\n");
 
 	// Drivers init
 	rtc_init();

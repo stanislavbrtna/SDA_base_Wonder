@@ -135,6 +135,7 @@ uint8_t svp_rename(uint8_t *source, uint8_t *dest) {
   uint8_t exten[8];
   static FRESULT res;
   static DIR dir;
+  static uint8_t dir_openned;
 
 uint8_t svp_strcmp_ext(uint8_t *s1, uint8_t *s_ext) {
   uint16_t x = 0;
@@ -167,6 +168,9 @@ uint8_t svp_strcmp_ext(uint8_t *s1, uint8_t *s_ext) {
 
 uint8_t svp_extFindNext(uint8_t *outStr, uint16_t len) {
   static FILINFO fno;
+  if (!dir_openned) {
+    return 0;
+  }
   while (1) {
 	  res = f_readdir(&dir, &fno);
       //printf("dir: %d\n", fno.fname);
@@ -180,6 +184,7 @@ uint8_t svp_extFindNext(uint8_t *outStr, uint16_t len) {
       } else {
     	//printf("closing\n");
     	f_closedir(&dir);
+    	dir_openned = 0;
     	//printf("closed\n");
     	return 0;
       }
@@ -188,8 +193,14 @@ uint8_t svp_extFindNext(uint8_t *outStr, uint16_t len) {
 
 uint8_t svp_extFind(uint8_t *outStr, uint16_t len, uint8_t *extension, uint8_t *directory){
   sda_strcp(extension, exten, 7);
+  if (dir_openned) {
+    f_closedir(&dir);
+    dir_openned = 0;
+  }
+
   res = f_opendir(&dir, (char *)directory);
-  if (res == FR_OK){
+  if (res == FR_OK) {
+    dir_openned = 1;
   	return svp_extFindNext(outStr, len);
   }
   return 0;
@@ -256,6 +267,11 @@ uint8_t svp_getcwd(uint8_t* buf, uint16_t len) {
 }
 
 uint8_t svp_unlink(uint8_t* path) {
+  f_unlink ((char *)path);
+  return 0;
+}
+
+uint8_t svp_rmdir(uint8_t* path) {
   f_unlink ((char *)path);
   return 0;
 }
