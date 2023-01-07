@@ -566,7 +566,7 @@ void lcd_send_cmd_d(uint8_t data) {
 }
 
 
-inline void lcd_hw_set_xy(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
+void lcd_hw_set_xy(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
 	lcd_send_cmd(0x2A);
 	lcd_send_data(x1 >> 8);
 	lcd_send_data(0x00FF & x1);
@@ -592,7 +592,7 @@ inline void lcd_hw_set_cursor(uint16_t Xpos, uint16_t Ypos) {
 	lcd_send_cmd(0x2C);
 }
 
-inline void lcd_hw_Draw_Point(uint16_t color) {
+void lcd_hw_Draw_Point(uint16_t color) {
 	lcd_send_data(color >> 8);
 	lcd_send_data(color & 0x00FF);
 }
