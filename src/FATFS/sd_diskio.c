@@ -132,9 +132,6 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		/* Everything is ok */
 
 		return HAL_OK;
-
-		mainSD.Init.ClockDiv = 10 + 200 * (tries + 1);
-		//printf("setting clock div to? %u\n", 10 + 20 * (tries + 1));
 	}
 	init = 2;
 	printf("SD init failed\n");
