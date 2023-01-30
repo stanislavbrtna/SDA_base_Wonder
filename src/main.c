@@ -184,7 +184,7 @@ int main() {
 	sda_platform_gpio_init();
 	sda_dbg_serial_enable();
 
-	printf("SDA-WONDER\nStanda 2019-2022\n\n");
+	printf("SDA-WONDER\nStanda 2019-2023\n\n");
 
 	// Drivers init
 	rtc_init();
@@ -225,6 +225,22 @@ int main() {
 	}
 
 	// FS mount is performed after the power check, to prevent SD corruption
+	if (sda_card_inserted() == 0) {
+	    LCD_Fill(LCD_MixColor(255, 0, 0));
+	    LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"SDA Error:\nSD card not found!\nPlease insert SD card.");
+
+	    LCD_DrawText_ext(32, 320, 0xFFFF, (uint8_t *)"SDA-OS v."SDA_OS_VERSION);
+	#ifdef PC
+	    getchar();
+	#else
+	    while(1){
+	      if (sda_card_inserted()) {
+	        break;
+	      }
+	    }
+	#endif
+	}
+
 	svp_mount();
 
 	sda_set_led(0);
@@ -237,7 +253,6 @@ int main() {
 
 	while(1) {
 		sda_main_loop();
-
 		// Sleep mode handling
 		if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0 && sdaWakeupFlag == 0) {
 			tick_lock = SDA_LOCK_LOCKED;

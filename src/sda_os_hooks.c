@@ -25,6 +25,13 @@ void sda_set_led(uint8_t set) {
 	}
 }
 
+uint8_t sda_card_inserted() {
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_SET) {
+    return 0;
+  }
+  return 1;
+}
+
 // Expansion serial port (uart3)
 
 void sda_serial_enable() {

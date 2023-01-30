@@ -312,6 +312,11 @@ void svp_fsync(svp_file *fp) {
 
 uint8_t svp_mount() {
   FRESULT fr;
+
+  if (sda_card_inserted() == 0) {
+    return 2;
+  }
+
   fr = f_mount(&FatFs, "", 1);
 
   if(fr != FR_OK) {
