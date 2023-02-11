@@ -29,7 +29,7 @@
             			
             <storageModule moduleId="cdtBuildSystem" version="4.0.0">
                 				
-                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148" name="Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.connection=unix:///var/run/docker.sock" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug">
+                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="" errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148" name="Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.enablement=null,org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.image=null,org.eclipse.cdt.docker.launcher.containerbuild.property.connection=unix:///var/run/docker.sock" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug">
                     					
                     <folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148." name="/" resourcePath="">
                         						
@@ -49,7 +49,7 @@
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.1586549627" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
                             							
-                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1336150649" name="ARM family" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.cortex-m4" valueType="enumerated"/>
+                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1336150649" name="ARM family (-mcpu)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.cortex-m4" valueType="enumerated"/>
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.1799725172" name="Float ABI" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.hard" valueType="enumerated"/>
                             							
@@ -93,6 +93,8 @@
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.id.88522839" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.toolchain.id" value="1287942917" valueType="string"/>
                             							
+                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createlisting.2079684318" name="Create extended listing" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.addtools.createlisting"/>
+                            							
                             <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.1957477972" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
                             							
                             <builder buildPath="${workspace_loc:/WONDER_TEST}/Debug" id="ilg.gnuarmeclipse.managedbuild.cross.builder.94083690" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
@@ -117,7 +119,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=20"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
                                     									
                                     <listOptionValue builtIn="false" value="TOUCH_USE_BATTERY_MEASUREMENT"/>
                                     									
@@ -159,7 +161,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=20"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
                                     									
                                     <listOptionValue builtIn="false" value="TOUCH_USE_BATTERY_MEASUREMENT"/>
                                     									
@@ -209,7 +211,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=20"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
                                     									
                                     <listOptionValue builtIn="false" value="TOUCH_USE_BATTERY_MEASUREMENT"/>
                                     									
@@ -290,6 +292,8 @@
                                 <option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart.1873050861" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart" value="true" valueType="boolean"/>
                                 								
                                 <option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.usenewlibnano.760044369" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.usenewlibnano" value="true" valueType="boolean"/>
+                                								
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.flags.1744870174" name="Linker flags (-Xlinker [option])" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.flags" useByScannerDiscovery="false" valueType="stringList"/>
                                 								
                                 <inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.input.471687794" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.input">
                                     									
@@ -419,7 +423,7 @@
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.1247864464" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
                             							
-                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1501336854" name="ARM family" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.cortex-m4" valueType="enumerated"/>
+                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1501336854" name="ARM family (-mcpu)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.cortex-m4" valueType="enumerated"/>
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.2128795186" name="Float ABI" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.soft" valueType="enumerated"/>
                             							
@@ -715,7 +719,7 @@
             			
             <storageModule moduleId="cdtBuildSystem" version="4.0.0">
                 				
-                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.291382011" name="Standard_ENG" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug">
+                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.291382011" name="Standard_ENG" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug">
                     					
                     <folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.291382011." name="/" resourcePath="">
                         						
@@ -735,7 +739,7 @@
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.656904837" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
                             							
-                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.656724183" name="ARM family" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.cortex-m4" valueType="enumerated"/>
+                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.656724183" name="ARM family (-mcpu)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.cortex-m4" valueType="enumerated"/>
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.1784273383" name="Float ABI" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.hard" valueType="enumerated"/>
                             							
@@ -803,7 +807,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=20"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
                                     									
                                     <listOptionValue builtIn="false" value="LANG_EN"/>
                                     									
@@ -847,7 +851,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=20"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
                                     									
                                     <listOptionValue builtIn="false" value="LANG_EN"/>
                                     									
@@ -899,7 +903,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=20"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
                                     									
                                     <listOptionValue builtIn="false" value="LANG_EN"/>
                                     									
@@ -1109,7 +1113,7 @@
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.59859117" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
                             							
-                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1211347662" name="ARM family" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.cortex-m4" valueType="enumerated"/>
+                            <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family.1211347662" name="ARM family (-mcpu)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.family" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.mcpu.cortex-m4" valueType="enumerated"/>
                             							
                             <option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.1394099376" name="Float ABI" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.hard" valueType="enumerated"/>
                             							
@@ -1469,7 +1473,19 @@
         		
         <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
         		
+        <scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.291382011;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.291382011.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.551023389;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.227876694">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
         <scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.559720425;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.834024699">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.291382011;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.291382011.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1939460448;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1056723049">
             			
             <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
             		
