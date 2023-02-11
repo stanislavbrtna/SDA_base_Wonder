@@ -224,7 +224,6 @@ int main() {
 		sda_setLcdCalibrationFlag(1);
 	}
 
-	// FS mount is performed after the power check, to prevent SD corruption
 	if (sda_card_inserted() == 0) {
 	    LCD_Fill(LCD_MixColor(255, 0, 0));
 	    LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"SDA Error:\nSD card not found!\nPlease insert SD card.");
@@ -241,11 +240,14 @@ int main() {
 	#endif
 	}
 
+	// FS mount is performed after the power check, to prevent SD corruption
 	svp_mount();
 
 	sda_set_led(0);
 
 	show_splash();
+
+	touch_lock = SDA_LOCK_UNLOCKED;
 
 	// Update time before jumping into main
 	rtc_update_struct();
