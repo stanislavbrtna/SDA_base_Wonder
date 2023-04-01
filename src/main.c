@@ -182,7 +182,7 @@ int main() {
 	irq_lock = SDA_LOCK_UNLOCKED;
 
 	sda_platform_gpio_init();
-	sda_dbg_serial_enable();
+	sda_usb_serial_enable();
 
 	printf("SDA-WONDER\nStanda 2019-2023\n\n");
 

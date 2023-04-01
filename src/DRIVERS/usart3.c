@@ -5,10 +5,12 @@ extern UART_HandleTypeDef huart3;
 extern volatile uint8_t sdaSerialEnabled;
 extern volatile sdaLockState tick_lock;
 
+uint32_t uart3BaudRate;
+
 void MX_USART3_UART_Init(void) {
   huart3.Instance = USART3;
   HAL_UART_DeInit(&huart3);
-  huart3.Init.BaudRate = 9600;
+  huart3.Init.BaudRate = uart3BaudRate;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;
@@ -68,6 +70,14 @@ void HAL_UART3_MspDeInit(UART_HandleTypeDef* uartHandle){
     HAL_NVIC_DisableIRQ(USART3_IRQn);
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
   }
+}
+
+void uart3_set_default_speed() {
+  uart3BaudRate = 9600;
+}
+
+void uart3_set_speed(uint32_t bd) {
+  uart3BaudRate = bd;
 }
 
 void uart3_transmit(uint8_t *str, uint32_t len) {

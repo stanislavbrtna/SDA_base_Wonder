@@ -59,6 +59,11 @@ extern void Error_Handler(void);
 void MX_USART2_UART_Init(void);
 void MX_USART2_UART_DeInit(void);
 void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle);
+
+// speed functions need usart to be re-initialized
+void uart2_set_default_speed();
+void uart2_set_speed(uint32_t bd);
+
 uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout);
 void uart2_transmit(uint8_t *str, uint32_t len);
 

@@ -35,6 +35,7 @@ void TIM3_IRQHandler() {
 	SDA_BASE_SPEAKER_PORT->ODR ^= SDA_BASE_SPEAKER_PIN;
 }
 
+
 void svp_beep() {
 	if (svpSGlobal.mute == 0) {
 		beep_flag = 1;
@@ -43,9 +44,11 @@ void svp_beep() {
 	}
 }
 
+
 void svp_beep_set_t(uint16_t time) {
 	beep_t = time;
 }
+
 
 void svp_beep_set_pf(uint16_t val) {
   if (val < 27) {
@@ -60,10 +63,12 @@ void svp_beep_set_pf(uint16_t val) {
 	TIM3->ARR = 20000/val;
 }
 
+
 void svp_beep_set_def() {
 	beep_scaler = 1000;
 	beep_t = 250;
 }
+
 
 void sda_beep_setup(uint16_t freq) {
 	__TIM3_CLK_ENABLE();
@@ -76,9 +81,10 @@ void sda_beep_setup(uint16_t freq) {
 	}
 
 	HAL_TIM_Base_DeInit(&beeptimer);
+
 	beeptimer.Instance               = TIM3;
 	beeptimer.Channel                = HAL_TIM_ACTIVE_CHANNEL_4;
-	beeptimer.Init.Prescaler         = 8400;
+	beeptimer.Init.Prescaler         = SystemCoreClock/20000; //8400;
 	beeptimer.Init.CounterMode       = TIM_COUNTERMODE_UP;
 	beeptimer.Init.Period            = 20000/freq;
 	beeptimer.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;

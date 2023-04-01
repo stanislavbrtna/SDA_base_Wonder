@@ -1,15 +1,21 @@
-#include "usart.h"
+#include "usart2-usb.h"
 
 extern UART_HandleTypeDef huart2;
-extern uint8_t sdaDbgSerialEnabled;
+extern uint8_t sdaUsbSerialEnabled;
 extern volatile sdaLockState tick_lock;
+
+uint32_t uart2BaudRate;
 
 void MX_USART2_UART_Init(void) {
 
   huart2.Instance = USART2;
   HAL_UART_DeInit(&huart2);
 
-  huart2.Init.BaudRate     = 9600;
+  if (uart2BaudRate == 0) {
+    uart2BaudRate = 9600;
+  }
+
+  huart2.Init.BaudRate     = uart2BaudRate;
   huart2.Init.WordLength   = UART_WORDLENGTH_8B;
   huart2.Init.StopBits     = UART_STOPBITS_1;
   huart2.Init.Parity       = UART_PARITY_NONE;
@@ -52,6 +58,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle){
   }
 }
 #else
+
 void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle) {
   GPIO_InitTypeDef GPIO_InitStruct;
   if(uartHandle->Instance == USART2) {
@@ -89,11 +96,25 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle){
     HAL_GPIO_DeInit(GPIOD, GPIO_PIN_5 | GPIO_PIN_6);
   }
 }
+#endif
 
+void uart2_quick_init() {
+  HAL_UART_MspInit(&huart2);
+  MX_USART2_UART_Init();
+  sdaUsbSerialEnabled = 1;
+}
+
+void uart2_set_default_speed() {
+  uart2BaudRate = 9600;
+}
+
+void uart2_set_speed(uint32_t bd) {
+  uart2BaudRate = bd;
+}
 
 void uart2_transmit(uint8_t *str, uint32_t len) {
-  if (!sdaDbgSerialEnabled) {
-    sda_dbg_serial_enable();
+  if (!sdaUsbSerialEnabled) {
+    uart2_quick_init();
   }
 
   HAL_UART_Transmit(&huart2, str, len, 1000);
@@ -104,8 +125,8 @@ uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
   static uint8_t buff[512];
   uint32_t tickstart = 0U;
 
-  if (!sdaDbgSerialEnabled) {
-    sda_dbg_serial_enable();
+  if (!sdaUsbSerialEnabled) {
+    uart2_quick_init();
   }
 
   for(uint32_t i = 0; i < sizeof(buff); i++) {
@@ -131,7 +152,6 @@ uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
       buff[i] = c;
       i++;
     }
-
   }
 
   for(i = 0; i < len; i++) {
@@ -142,7 +162,7 @@ uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 
   return 1;
 }
-#endif
+
 
 uint8_t usart2_buff[512];
 volatile uint16_t usart2_buff_n;
@@ -155,8 +175,8 @@ uint8_t uart2_recieve_IT() {
   usart2_DR = 0;
   usart2_buff_n = 0;
 
-  if (!sdaDbgSerialEnabled) {
-    sda_dbg_serial_enable();
+  if (!sdaUsbSerialEnabled) {
+    uart2_quick_init();
   }
 
   for(uint32_t i = 0; i < sizeof(usart2_buff); i++) {
@@ -214,7 +234,6 @@ uint16_t uart2_get_str(uint8_t *str) {
 }
 
 
-void USART2_IRQHandler(void)
-{
+void USART2_IRQHandler(void) {
   HAL_UART_IRQHandler(&huart2);
 }

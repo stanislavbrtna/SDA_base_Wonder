@@ -200,10 +200,10 @@ int _read(int file, char *ptr, int len) {
 
 //extern UART_HandleTypeDef UartHandle;
 
-extern volatile uint8_t sdaDbgSerialEnabled;
+extern volatile uint8_t sdaUsbSerialEnabled;
 
 int _write(int file, char *ptr, int len) {
-		if (!sdaDbgSerialEnabled) {
+		if (!sdaUsbSerialEnabled) {
 			return len;
 		}
 
