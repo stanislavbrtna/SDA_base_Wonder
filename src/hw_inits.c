@@ -50,6 +50,16 @@ static void platform_gpio_in_pullup(GPIO_TypeDef *port, uint32_t pin) {
   HAL_GPIO_Init(port, &GPIO_InitStructure);
 }
 
+static void platform_gpio_in_nopull(GPIO_TypeDef *port, uint32_t pin) {
+  GPIO_InitTypeDef GPIO_InitStructure;
+  HAL_GPIO_DeInit(port, pin);
+  GPIO_InitStructure.Pin = pin;
+  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(port, &GPIO_InitStructure);
+}
+
 void pwr_btn_gpio_init() {
 	GPIO_InitTypeDef GPIO_InitStruct;
 	//printf("sda entering deep sleep\n");
@@ -73,6 +83,7 @@ void sda_platform_gpio_init() {
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOD_CLK_ENABLE();
 	__HAL_RCC_GPIOE_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
 
 	//Board revision detection
 	platform_gpio_in(GPIOB, GPIO_PIN_6); // sets pulldown
@@ -91,6 +102,9 @@ void sda_platform_gpio_init() {
 
 	//PA15 SD_detect
 	platform_gpio_in_pullup(GPIOA, GPIO_PIN_15);
+
+	//PC13 Chrg detect
+	platform_gpio_in_nopull(GPIOC, GPIO_PIN_13);
 
 	//PA0 in - sw-on
 	platform_gpio_in(GPIOA, GPIO_PIN_0);
