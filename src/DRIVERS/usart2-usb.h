@@ -72,6 +72,8 @@ uint8_t uart2_get_rdy();
 uint16_t uart2_get_str(uint8_t *str);
 
 void HAL_USART_RxCpltCallback(USART_HandleTypeDef *husart);
+void uart2_set_default_speed();
+void uart2_set_speed(uint32_t bd);
 
 #ifdef __cplusplus
 }

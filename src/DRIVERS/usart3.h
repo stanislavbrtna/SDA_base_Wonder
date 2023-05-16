@@ -18,6 +18,9 @@ uint8_t uart3_recieve_IT();
 uint8_t uart3_get_rdy();
 uint16_t uart3_get_str(uint8_t *str); // return: len
 
+void uart3_set_default_speed();
+void uart3_set_speed(uint32_t bd);
+
 #endif 
 
 

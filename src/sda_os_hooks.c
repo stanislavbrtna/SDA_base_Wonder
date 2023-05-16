@@ -15,6 +15,7 @@ extern volatile uint8_t Lcd_off_flag;
 
 volatile uint8_t sdaSerialEnabled;
 volatile uint8_t sdaUsbSerialEnabled;
+volatile uint8_t sdaUsbSerialForDebug;
 
 //=============================================================================
 // notif LED control
@@ -113,11 +114,11 @@ void sda_serial_disable() {
   sdaSerialEnabled = 0;
 }
 
-void sda_serial_init_bd(uint16_t bd) {
+void sda_serial_init_bd(uint32_t bd) {
   uart3_set_speed(bd);
   MX_USART3_UART_DeInit();
-  HAL_UART3_MspInit(&huart3);
   MX_USART3_UART_Init();
+  HAL_UART3_MspInit(&huart3);
   sdaSerialEnabled = 1;
 }
 
@@ -158,7 +159,7 @@ void sda_usb_serial_enable() {
   sdaUsbSerialEnabled = 1;
 }
 
-void sda_usb_serial_init_bd(uint16_t bd) {
+void sda_usb_serial_init_bd(uint32_t bd) {
   uart2_set_speed(bd);
   MX_USART2_UART_DeInit();
   HAL_UART_MspInit(&huart2);
@@ -196,6 +197,13 @@ uint16_t sda_usb_serial_get_str(uint8_t *str) {
   return uart2_get_str(str);
 }
 
+void sda_usb_enable_for_dbg(uint8_t val) {
+  sdaUsbSerialForDebug = val;
+}
+
+uint8_t sda_usb_get_enable_for_dbg() {
+  return sdaUsbSerialForDebug;
+}
 
 //=============================================================================
 // hw RNG
@@ -251,7 +259,6 @@ float sda_get_battery_voltage() {
 // System clock settings
 
 static void reload_clock_sensitive_stuff() {
-  MX_USART2_UART_Init();
   lcd_bl_timer_OC_update();
 
   if (sdaSerialEnabled) {

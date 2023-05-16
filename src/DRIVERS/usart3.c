@@ -108,22 +108,21 @@ uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 	uint32_t i = 0;
 	tick_lock = SDA_LOCK_LOCKED;
 	while (i < len) {
-		uint8_t c;
-		if (HAL_UART_Receive(&huart3, &c, sizeof(c), timeout / len) != HAL_OK) {
-			if ( HAL_GetTick() > (tickstart + timeout + 100)) {
-				if(i == 0){
-					printf("uart3 recv error\n");
-					tick_lock = SDA_LOCK_UNLOCKED; // enable tick again!
-					return 0;
-				}else{
-					break;
-				}
-			}
-		}else{
-			buff[i] = c;
-			i++;
-		}
-
+	   uint8_t c;
+	   if (HAL_UART_Receive(&huart3, &c, sizeof(c), timeout / len) != HAL_OK) {
+	     if ( HAL_GetTick() > (tickstart + timeout + 100)) {
+	       if(i == 0){
+	         printf("uart3 recv error\n");
+	         tick_lock = SDA_LOCK_UNLOCKED; // enable tick again!
+	         return 0;
+	       }else{
+	         break;
+	       }
+	     }
+	   }else{
+	     buff[i] = c;
+	     i++;
+	   }
 	}
 
 	for(i = 0; i < len; i++) {
@@ -163,6 +162,7 @@ uint8_t uart3_recieve_IT() {
   usart3_c[1] = 0;
   usart3_DR = 0;
   usart3_buff_n = 0;
+  HAL_UART_AbortReceive_IT(&huart3);
 
   if (!sdaSerialEnabled) {
     sda_serial_enable();

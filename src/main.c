@@ -138,6 +138,7 @@ void SysTick_Handler(void) {
 					if (Lcd_off_flag > 1) {
 						Lcd_off_flag--;
 					}
+
 					if (Lcd_off_flag == 1) {
 						Lcd_off_flag = 0;
 						if(svpSGlobal.lcdState == LCD_OFF) {
@@ -183,6 +184,7 @@ int main() {
 
 	sda_platform_gpio_init();
 	sda_usb_serial_enable();
+	sda_usb_enable_for_dbg(1);
 
 	printf("SDA-WONDER\nStanda 2019-2023\n\n");
 
