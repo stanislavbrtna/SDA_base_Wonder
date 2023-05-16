@@ -198,11 +198,11 @@ void touch_draw_cpoint(uint16_t x, uint16_t y, uint16_t color) {
 
 /*
  * calibration points
- * 0:64x64   1:256x64
+ * 0:32x32   1:288x32
  *
  *    2:160x240
  *
- * 3:64x416  4:256x416
+ * 3:32x448  4:288x448
  * */
 
 // draw all the calibration targets
@@ -227,8 +227,8 @@ void sda_calibrate () {
   uint16_t i = 0;
   touchCalibDataStruct t;
 
-  uint16_t x_pos[5] = {64, 256, 160, 64, 256};
-  uint16_t y_pos[5] = {64, 64, 240, 416, 416};
+  uint16_t x_pos[5] = {32, 288, 160,  32, 288};
+  uint16_t y_pos[5] = {32,  32, 240, 448, 448};
 
   while (1) {
 
