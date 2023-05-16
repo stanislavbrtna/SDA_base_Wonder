@@ -201,11 +201,16 @@ int _read(int file, char *ptr, int len) {
 //extern UART_HandleTypeDef UartHandle;
 
 extern volatile uint8_t sdaUsbSerialEnabled;
+extern volatile uint8_t sdaUsbSerialForDebug;
 
 int _write(int file, char *ptr, int len) {
 		if (!sdaUsbSerialEnabled) {
 			return len;
 		}
+
+		if (!sdaUsbSerialForDebug) {
+      return len;
+    }
 
     switch (file) {
     case STDOUT_FILENO: /*stdout*/
