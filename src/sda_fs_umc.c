@@ -56,19 +56,19 @@ uint8_t svp_fopen_rw(svp_file *fp, uint8_t *fname) {
 
 
 uint8_t svp_fexists(uint8_t *fname) {
-svp_file fp;
+  svp_file fp;
 
 	if (!sd_mounted) {
 		return 0;
 	}
 
-  fp.fPointerRes = f_open(&(fp.fPointer), (char*)fname, FA_READ);
-	if (fp.fPointerRes == FR_OK) {
-	  f_close(&(fp.fPointer));
-	  return 1;
-	} else {
-	  return 0;
-	}
+	fp.fPointerRes = f_stat((char *)fname, 0);
+
+  if (fp.fPointerRes == FR_OK) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 uint8_t svp_fread_u8(svp_file *fp) {
@@ -289,10 +289,9 @@ uint8_t svp_is_dir(uint8_t* path) {
 
   if (fno.fattrib & AM_DIR) {
   	return 1;
-  } else {
-  	return 0;
   }
 
+  return 0;
 }
 
 uint8_t svp_mkdir(uint8_t* path) {
