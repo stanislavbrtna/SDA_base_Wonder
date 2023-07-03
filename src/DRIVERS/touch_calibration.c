@@ -109,7 +109,6 @@ uint8_t touch_read_xy_m30(touchXY *result) {
 uint8_t touch_get_xy(touchXY *result) {
   touchXY res;
   uint8_t i = 0;
-  float a, b, c, d;
 
   // read touch
   if (touch_read_adc_xy(&res)) {
