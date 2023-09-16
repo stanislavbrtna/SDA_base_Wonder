@@ -139,9 +139,16 @@ uint8_t touch_get_xy(touchXY *result) {
         i = 3;
       }
 
-      result->x = touchCalibData.a[i] * (float)res.x + touchCalibData.b[i];
-      result->y = touchCalibData.c[i] * (float)res.y + touchCalibData.d[i];
+      result->x = touchCalibData.a[i] * (float)res.x + touchCalibData.b[i] * (float)res.y + touchCalibData.c[i];
+      result->y = touchCalibData.d[i] * (float)res.x + touchCalibData.e[i] * (float)res.y + touchCalibData.f[i];
 
+      if (i == 0 && result->x > 160) {
+        result->x = 160;
+      }
+
+      if (i == 1 && result->x < 160) {
+        result->x = 160;
+      }
 
       // fix limits
       if (result->y == 0) {
@@ -184,6 +191,8 @@ void svp_set_calibration_data(touchCalibDataStruct input) {
     touchCalibData.b[i] = input.b[i];
     touchCalibData.c[i] = input.c[i];
     touchCalibData.d[i] = input.d[i];
+    touchCalibData.e[i] = input.e[i];
+    touchCalibData.f[i] = input.f[i];
   }
 }
 
@@ -195,21 +204,12 @@ void touch_draw_cpoint(uint16_t x, uint16_t y, uint16_t color) {
 }
 
 
-/*
- * calibration points
- * 0:32x32   1:288x32
- *
- *    2:160x240
- *
- * 3:32x448  4:288x448
- * */
-
 // draw all the calibration targets
 void redraw_cpoints(uint8_t active, uint16_t * x_pos, uint16_t * y_pos) {
   LCD_setDrawArea(0, 0, 319, 479);
   LCD_Fill(0x0000);
 
-  for(uint8_t i = 0; i < 5; i++){
+  for(uint8_t i = 0; i < 7; i++) {
     if (i == active) {
       touch_draw_cpoint(x_pos[i], y_pos[i], LCD_MixColor(255, 0, 0));
     } else {
@@ -218,21 +218,84 @@ void redraw_cpoints(uint8_t active, uint16_t * x_pos, uint16_t * y_pos) {
   }
 }
 
+/*
+ * a1 b1 c1
+ * a2 b2 c2
+ * a3 b3 c3
+ *
+ */
+
+float get_det(
+    float a1,
+    float b1,
+    float c1,
+    float a2,
+    float b2,
+    float c2,
+    float a3,
+    float b3,
+    float c3
+) {
+  return (a1*b2*c3 + b1*c2*a3 + c1*a2*b3) - (a3*b2*c1 + b3*c2*a1 + c3*a2*b1);
+}
+
+void set_quadrant(
+    float _x1,
+    float _y1,
+    float _x2,
+    float _y2,
+    float _x3,
+    float _y3,
+    float x1,
+    float y1,
+    float x2,
+    float y2,
+    float x3,
+    float y3,
+    touchCalibDataStruct *t,
+    uint8_t n
+) {
+  float det = get_det(_x1, _y1, 1, _x2, _y2, 1, _x3, _y3, 1);
+  float det_x1 = get_det(x1, _y1, 1, x2, _y2, 1, x3, _y3, 1);
+  float det_x2 = get_det(_x1, x1, 1, _x2, x2, 1, _x3, x3, 1);
+  float det_x3 = get_det(_x1, _y1, x1, _x2, _y2, x2, _x3, _y3, x3);
+
+  float det_y1 = get_det(y1, _y1, 1, y2, _y2, 1, y3, _y3, 1);
+  float det_y2 = get_det(_x1, y1, 1, _x2, y2, 1, _x3, y3, 1);
+  float det_y3 = get_det(_x1, _y1, y1, _x2, _y2, y2, _x3, _y3, y3);
+
+  t->a[n] = det_x1/det;
+  t->b[n] = det_x2/det;
+  t->c[n] = det_x3/det;
+  t->d[n] = det_y1/det;
+  t->e[n] = det_y2/det;
+  t->f[n] = det_y3/det;
+}
+
 // Calibration routine
 void sda_calibrate () {
   touchXY res;
-  float rx[5];
-  float ry[5];
+  float rx[7];
+  float ry[7];
   uint16_t i = 0;
   touchCalibDataStruct t;
 
-  uint16_t x_pos[5] = { 50, 320 - 50, 160,       50, 320 - 50};
-  uint16_t y_pos[5] = { 50,       50, 240, 480 - 50, 480 - 50};
+  /*
+   * calibration points
+   * 0:32x32   1:288x32
+   *
+   * 2:32x240 3:160x240 4:288x240
+   *
+   * 5:32x448  6:288x448
+   * */
+
+  uint16_t x_pos[7] = { 50, 320 - 50,  50, 160, 320 - 50,       50, 320 - 50};
+  uint16_t y_pos[7] = { 50,       50, 240, 240,      240, 480 - 50, 480 - 50};
 
   while (1) {
 
     // get data
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < 7; i++) {
       redraw_cpoints(i, x_pos, y_pos);
       while (touch_read_xy_m30(&res) == 0);
       touch_delay(300000);
@@ -240,7 +303,7 @@ void sda_calibrate () {
       rx[i] = (float) res.x;
       ry[i] = (float) res.y;
 
-      if (i == 2) {
+      if (i == 3) {
         t.cx = res.x;
         t.cy = res.y;
       }
@@ -249,27 +312,10 @@ void sda_calibrate () {
       touch_delay(300000);
     }
 
-    // compute
-    t.c[0] = (y_pos[2] - y_pos[0]) / (ry[2] - ry[0]);
-    t.a[0] = (x_pos[2] - x_pos[0]) / (rx[2] - rx[0]);
-    t.b[0] = x_pos[2] - t.a[0] * rx[2];
-    t.d[0] = y_pos[2] - t.c[0] * ry[2];
-
-
-    t.c[1] = (y_pos[2] - y_pos[1]) / (ry[2] - ry[1]);
-    t.a[1] = (x_pos[1] - x_pos[2]) / (rx[1] - rx[2]);
-    t.b[1] = x_pos[1] - t.a[1] * rx[1];
-    t.d[1] = y_pos[2] - t.c[1] * ry[2];
-
-    t.c[2] = (y_pos[3] - y_pos[2]) / (ry[3] - ry[2]);
-    t.a[2] = (x_pos[2] - x_pos[3]) / (rx[2] - rx[3]);
-    t.b[2] = x_pos[3] - t.a[2] * rx[3];
-    t.d[2] = y_pos[3] - t.c[2] * ry[3];
-
-    t.c[3] = (y_pos[4] - y_pos[2]) / (ry[4] - ry[2]);
-    t.a[3] = (x_pos[4] - x_pos[2]) / (rx[4] - rx[2]);
-    t.b[3] = x_pos[4] - t.a[3] * rx[4];
-    t.d[3] = y_pos[4] - t.c[3] * ry[4];
+    set_quadrant(rx[0], ry[0], rx[2], ry[2], rx[3], ry[3], x_pos[0], y_pos[0], x_pos[2], y_pos[2], x_pos[3], y_pos[3], &t, 0);
+    set_quadrant(rx[3], ry[3], rx[1], ry[1], rx[4], ry[4], x_pos[3], y_pos[3], x_pos[1], y_pos[1], x_pos[4], y_pos[4], &t, 1);
+    set_quadrant(rx[2], ry[2], rx[3], ry[3], rx[5], ry[5], x_pos[2], y_pos[2], x_pos[3], y_pos[3], x_pos[5], y_pos[5], &t, 2);
+    set_quadrant(rx[3], ry[3], rx[4], ry[4], rx[6], ry[6], x_pos[3], y_pos[3], x_pos[4], y_pos[4], x_pos[6], y_pos[6], &t, 3);
 
     // set the new calibration data
     svp_set_calibration_data(t);

@@ -37,6 +37,8 @@ typedef struct {
 	float b[4];
 	float c[4];
 	float d[4];
+	float e[4];
+	float f[4];
 } touchCalibDataStruct;
 
 #include "../sda_platform.h"
