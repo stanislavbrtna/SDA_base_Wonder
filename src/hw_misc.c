@@ -184,7 +184,7 @@ void show_splash() {
     }
   }
 
-  for(uint32_t count = 25000000; count != 0; count--) {
+  for(uint32_t count = 1000000; count != 0; count--) {
     if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
       break;
     }
