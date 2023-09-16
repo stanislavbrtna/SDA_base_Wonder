@@ -139,8 +139,8 @@ uint8_t touch_get_xy(touchXY *result) {
         i = 3;
       }
 
-      result->x = touchCalibData.a[i] * res.x + touchCalibData.b[i];
-      result->y = touchCalibData.c[i] * res.y + touchCalibData.d[i];
+      result->x = touchCalibData.a[i] * (float)res.x + touchCalibData.b[i];
+      result->y = touchCalibData.c[i] * (float)res.y + touchCalibData.d[i];
 
 
       // fix limits
@@ -226,8 +226,8 @@ void sda_calibrate () {
   uint16_t i = 0;
   touchCalibDataStruct t;
 
-  uint16_t x_pos[5] = {32, 288, 160,  32, 288};
-  uint16_t y_pos[5] = {32,  32, 240, 448, 448};
+  uint16_t x_pos[5] = { 50, 320 - 50, 160,       50, 320 - 50};
+  uint16_t y_pos[5] = { 50,       50, 240, 480 - 50, 480 - 50};
 
   while (1) {
 
@@ -252,7 +252,7 @@ void sda_calibrate () {
     // compute
     t.c[0] = (y_pos[2] - y_pos[0]) / (ry[2] - ry[0]);
     t.a[0] = (x_pos[2] - x_pos[0]) / (rx[2] - rx[0]);
-    t.b[0] = x_pos[0] - t.a[0] * rx[0];
+    t.b[0] = x_pos[2] - t.a[0] * rx[2];
     t.d[0] = y_pos[2] - t.c[0] * ry[2];
 
 
@@ -264,12 +264,12 @@ void sda_calibrate () {
     t.c[2] = (y_pos[3] - y_pos[2]) / (ry[3] - ry[2]);
     t.a[2] = (x_pos[2] - x_pos[3]) / (rx[2] - rx[3]);
     t.b[2] = x_pos[3] - t.a[2] * rx[3];
-    t.d[2] = y_pos[2] - t.c[2] * ry[2];
+    t.d[2] = y_pos[3] - t.c[2] * ry[3];
 
     t.c[3] = (y_pos[4] - y_pos[2]) / (ry[4] - ry[2]);
     t.a[3] = (x_pos[4] - x_pos[2]) / (rx[4] - rx[2]);
     t.b[3] = x_pos[4] - t.a[3] * rx[4];
-    t.d[3] = y_pos[2] - t.c[3] * ry[2];
+    t.d[3] = y_pos[4] - t.c[3] * ry[4];
 
     // set the new calibration data
     svp_set_calibration_data(t);
