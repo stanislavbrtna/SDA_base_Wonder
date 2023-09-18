@@ -22,6 +22,22 @@ SOFTWARE.
 
 #include "touch.h"
 
+#if LANG_VAL==0
+#define CALIB_TITLE (uint8_t *)"Test Kalibrace"
+#define CALIB_HINT  (uint8_t *)"(Použijte tlačítka k potvrzení)"
+#define CALIB_AGAIN (uint8_t *)"Rekalibrovat"
+#define CALIB_OK    (uint8_t *)"Ok"
+#endif
+
+
+#if LANG_VAL==1
+#define CALIB_TITLE (uint8_t *)"Calibration test"
+#define CALIB_HINT  (uint8_t *)"(use buttons to select option)"
+#define CALIB_AGAIN (uint8_t *)"Calibrate again"
+#define CALIB_OK    (uint8_t *)"Ok"
+#endif
+
+
 touchCalibDataStruct touchCalibData;
 uint8_t calibrationFlag;
 
@@ -321,32 +337,22 @@ void sda_calibrate () {
     svp_set_calibration_data(t);
 
     LCD_Fill(0x0000);
-#ifndef LANG_VAL
-    LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Test Kalibrace");
-    LCD_DrawText_ext(10, 420, 0xFFFF, (uint8_t *)"Rekalibrovat");
-    LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
-#else
-#if LANG_VAL==0
-    LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Test Kalibrace");
-    LCD_DrawText_ext(40, 260, 0xFFFF, (uint8_t *)"(Použijte tlačítka k potvrzení)");
-    LCD_DrawText_ext(10, 420, 0xFFFF, (uint8_t *)"Rekalibrovat");
-    LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
-#endif
 
-#if LANG_VAL==1
-    LCD_DrawText_ext(80, 240, 0xFFFF, (uint8_t *)"Calibration test");
-    LCD_DrawText_ext(40, 260, 0xFFFF, (uint8_t *)"(use buttons to select option)");
-    LCD_DrawText_ext(10, 420, 0xFFFF, (uint8_t *)"Calibrate again");
-    LCD_DrawText_ext(280, 420, 0xFFFF, (uint8_t *)"Ok");
-#endif
+    LCD_DrawText_ext(80, 240, 0xFFFF, CALIB_TITLE);
+    LCD_DrawText_ext(20, 260, 0xFFFF, CALIB_HINT);
+    LCD_DrawText_ext(10, 420, 0xFFFF, CALIB_AGAIN);
+    LCD_DrawText_ext(280, 420, 0xFFFF, CALIB_OK);
 
-#endif
     // test it
     while (1) {
-      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET) {
+      if (HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET) {
+        LCD_DrawText_ext(10, 420, 0x07C0, CALIB_AGAIN);
+        while(HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET);
         break;
       }
-      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_SET) {
+      if (HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
+        LCD_DrawText_ext(280, 420, 0x07C0, CALIB_OK);
+        while(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET);
         return;
       }
       // by showing a point where we touch
