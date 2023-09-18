@@ -119,7 +119,9 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
+                                    <listOptionValue builtIn="false" value="SVS_RND_FUNCTION=&quot;svp_random()&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=24"/>
                                     									
                                     <listOptionValue builtIn="false" value="TOUCH_USE_BATTERY_MEASUREMENT"/>
                                     									
@@ -161,7 +163,9 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
+                                    <listOptionValue builtIn="false" value="SVS_RND_FUNCTION=&quot;svp_random()&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=24"/>
                                     									
                                     <listOptionValue builtIn="false" value="TOUCH_USE_BATTERY_MEASUREMENT"/>
                                     									
@@ -211,7 +215,9 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
+                                    <listOptionValue builtIn="false" value="SVS_RND_FUNCTION=&quot;svp_random()&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=24"/>
                                     									
                                     <listOptionValue builtIn="false" value="TOUCH_USE_BATTERY_MEASUREMENT"/>
                                     									
@@ -361,7 +367,7 @@
                     					
                     <sourceEntries>
                         						
-                        <entry excluding="SDA_OS/GR2/lcd_io.c|SDA_OS/SVS/svs_pc.c|FATFS/diskio.c|FATFS/option/cc932.c|FATFS/option/cc936.c|FATFS/option/cc949.c|FATFS/option/cc950.c|FATFS/option/ccsbcs.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+                        <entry excluding="_write.c|SDA_OS/GR2/lcd_io.c|SDA_OS/SVS/svs_pc.c|FATFS/diskio.c|FATFS/option/cc932.c|FATFS/option/cc936.c|FATFS/option/cc949.c|FATFS/option/cc950.c|FATFS/option/ccsbcs.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
                         						
                         <entry excluding="src/stm32f4-hal/stm32f4xx_hal_timebase_tim_template.c|src/stm32f4-hal/stm32f4xx_hal_timebase_rtc_wakeup_template.c|src/stm32f4-hal/stm32f4xx_hal_timebase_rtc_alarm_template.c|src/stm32f4-hal/stm32f4xx_ll_usb.c|src/stm32f4-hal/stm32f4xx_ll_fsmc.c|src/stm32f4-hal/stm32f4xx_ll_fmc.c|src/stm32f4-hal/stm32f4xx_hal_wwdg.c|src/stm32f4-hal/stm32f4xx_hal_sram.c|src/stm32f4-hal/stm32f4xx_hal_spdifrx.c|src/stm32f4-hal/stm32f4xx_hal_smartcard.c|src/stm32f4-hal/stm32f4xx_hal_sdram.c|src/stm32f4-hal/stm32f4xx_hal_sai_ex.c|src/stm32f4-hal/stm32f4xx_hal_sai.c|src/stm32f4-hal/stm32f4xx_hal_qspi.c|src/stm32f4-hal/stm32f4xx_hal_pcd_ex.c|src/stm32f4-hal/stm32f4xx_hal_pcd.c|src/stm32f4-hal/stm32f4xx_hal_pccard.c|src/stm32f4-hal/stm32f4xx_hal_nor.c|src/stm32f4-hal/stm32f4xx_hal_nand.c|src/stm32f4-hal/stm32f4xx_hal_msp_template.c|src/stm32f4-hal/stm32f4xx_hal_ltdc.c|src/stm32f4-hal/stm32f4xx_hal_irda.c|src/stm32f4-hal/stm32f4xx_hal_i2s_ex.c|src/stm32f4-hal/stm32f4xx_hal_i2s.c|src/stm32f4-hal/stm32f4xx_hal_i2c_ex.c|src/stm32f4-hal/stm32f4xx_hal_i2c.c|src/stm32f4-hal/stm32f4xx_hal_hcd.c|src/stm32f4-hal/stm32f4xx_hal_hash_ex.c|src/stm32f4-hal/stm32f4xx_hal_hash.c|src/stm32f4-hal/stm32f4xx_hal_fmpi2c_ex.c|src/stm32f4-hal/stm32f4xx_hal_fmpi2c.c|src/stm32f4-hal/stm32f4xx_hal_eth.c|src/stm32f4-hal/stm32f4xx_hal_dma_ex.c|src/stm32f4-hal/stm32f4xx_hal_dma2d.c|src/stm32f4-hal/stm32f4xx_hal_dcmi_ex.c|src/stm32f4-hal/stm32f4xx_hal_dcmi.c|src/stm32f4-hal/stm32f4xx_hal_cryp_ex.c|src/stm32f4-hal/stm32f4xx_hal_cryp.c|src/stm32f4-hal/stm32f4xx_hal_crc.c|src/stm32f4-hal/stm32f4xx_hal_can.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="system"/>
                         					
@@ -403,7 +409,7 @@
             			
             <storageModule moduleId="cdtBuildSystem" version="4.0.0">
                 				
-                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1710807085" name="Release" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release">
+                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1710807085" name="Release" optionalBuildProperties="" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release">
                     					
                     <folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1710807085." name="/" resourcePath="">
                         						
@@ -807,7 +813,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=24"/>
                                     									
                                     <listOptionValue builtIn="false" value="LANG_EN"/>
                                     									
@@ -851,7 +857,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=24"/>
                                     									
                                     <listOptionValue builtIn="false" value="LANG_EN"/>
                                     									
@@ -903,7 +909,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="DEBUG"/>
                                     									
-                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=21"/>
+                                    <listOptionValue builtIn="false" value="SYSCALL_WRAPPERS=24"/>
                                     									
                                     <listOptionValue builtIn="false" value="LANG_EN"/>
                                     									
@@ -1093,7 +1099,7 @@
             			
             <storageModule moduleId="cdtBuildSystem" version="4.0.0">
                 				
-                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.1574684586" name="With USE_SPI" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug">
+                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.1574684586" name="With USE_SPI" optionalBuildProperties="" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug">
                     					
                     <folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.623173148.1574684586." name="/" resourcePath="">
                         						

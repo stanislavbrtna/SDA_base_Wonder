@@ -1,3 +1,5 @@
 Debug/*
 Standard_ENG
 With USE_SPI
+/Debug/
+/Release/
