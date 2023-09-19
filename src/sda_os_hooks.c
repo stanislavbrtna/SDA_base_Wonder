@@ -261,17 +261,8 @@ float sda_get_battery_voltage() {
 static void reload_clock_sensitive_stuff() {
   lcd_bl_timer_OC_update();
 
-  if (sdaSerialEnabled) {
-    MX_USART3_UART_DeInit();
-    HAL_UART3_MspInit(&huart3);
-    MX_USART3_UART_Init();
-  }
-
-  if (sdaUsbSerialEnabled) {
-    MX_USART2_UART_DeInit();
-    HAL_UART_MspInit(&huart2);
-    MX_USART2_UART_Init();
-  }
+  uart3_wake_up();
+  uart2_wake_up();
 
   if (beep_flag) {
     sda_base_beep_start();

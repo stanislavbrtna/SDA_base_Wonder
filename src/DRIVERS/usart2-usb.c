@@ -6,6 +6,8 @@ extern volatile sdaLockState tick_lock;
 
 uint32_t uart2BaudRate;
 
+static volatile uint8_t it_rcv_enabled;
+
 void MX_USART2_UART_Init(void) {
 
   huart2.Instance = USART2;
@@ -104,6 +106,18 @@ void uart2_quick_init() {
   sdaUsbSerialEnabled = 1;
 }
 
+void uart2_wake_up() {
+  if(sdaUsbSerialEnabled == 0) {
+    return;
+  }
+
+  uart2_quick_init();
+
+  if(it_rcv_enabled == 1) {
+    uart2_recieve_IT();
+  }
+}
+
 void uart2_set_default_speed() {
   uart2BaudRate = 9600;
 }
@@ -128,6 +142,8 @@ uint8_t uart2_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
   if (!sdaUsbSerialEnabled) {
     uart2_quick_init();
   }
+
+  it_rcv_enabled = 0;
 
   for(uint32_t i = 0; i < sizeof(buff); i++) {
     buff[i] = 0;
@@ -178,6 +194,8 @@ uint8_t uart2_recieve_IT() {
   if (!sdaUsbSerialEnabled) {
     uart2_quick_init();
   }
+
+  it_rcv_enabled = 1;
 
   for(uint32_t i = 0; i < sizeof(usart2_buff); i++) {
     usart2_buff[i] = 0;

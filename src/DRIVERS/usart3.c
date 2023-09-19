@@ -4,6 +4,7 @@
 extern UART_HandleTypeDef huart3;
 extern volatile uint8_t sdaSerialEnabled;
 extern volatile sdaLockState tick_lock;
+static volatile uint8_t it_rcv_enabled;
 
 uint32_t uart3BaudRate;
 
@@ -72,6 +73,20 @@ void HAL_UART3_MspDeInit(UART_HandleTypeDef* uartHandle){
   }
 }
 
+void uart3_wake_up() {
+  if (!sdaSerialEnabled) {
+    return;
+  }
+
+  HAL_UART3_MspInit(&huart3);
+  MX_USART3_UART_Init();
+
+  if(it_rcv_enabled) {
+    uart3_recieve_IT();
+  }
+
+}
+
 void uart3_set_default_speed() {
   uart3BaudRate = 9600;
 }
@@ -98,6 +113,9 @@ uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 	if (!sdaSerialEnabled) {
 		sda_serial_enable();
 	}
+
+	HAL_UART_AbortReceive_IT(&huart3);
+	it_rcv_enabled = 0;
 
 	for(uint32_t i = 0; i < sizeof(buff); i++) {
 		buff[i] = 0;
@@ -167,6 +185,8 @@ uint8_t uart3_recieve_IT() {
   if (!sdaSerialEnabled) {
     sda_serial_enable();
   }
+
+  it_rcv_enabled = 1;
 
   for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
     usart3_buff[i] = 0;

@@ -21,6 +21,8 @@ uint16_t uart3_get_str(uint8_t *str); // return: len
 void uart3_set_default_speed();
 void uart3_set_speed(uint32_t bd);
 
+void uart3_wake_up();
+
 #endif 
 
 

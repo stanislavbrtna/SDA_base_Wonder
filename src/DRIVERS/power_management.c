@@ -55,6 +55,8 @@ void sda_sleep() { // should be called when tick is locked
   // 3.7 mA PWR_LOWPOWERREGULATOR_ON 3.8 with main power, on main power it wakes up immediately
   HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
   //HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI); // orig 8.6 mA
+
+  // Wakeup
   system_clock_set_normal();
   HAL_ResumeTick();
   sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);

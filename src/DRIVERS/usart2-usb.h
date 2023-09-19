@@ -75,6 +75,8 @@ void HAL_USART_RxCpltCallback(USART_HandleTypeDef *husart);
 void uart2_set_default_speed();
 void uart2_set_speed(uint32_t bd);
 
+void uart2_wake_up();
+
 #ifdef __cplusplus
 }
 #endif
