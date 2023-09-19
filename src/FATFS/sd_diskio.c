@@ -52,7 +52,7 @@
 #include "../sda_platform.h"
 
 
-// simplyfied for use in SDA sw stack
+// simplified for use in SDA sw stack
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -66,9 +66,8 @@ extern volatile uint8_t cpuClkLowFlag;
 void SD_setSpeedHi() {
 	if (cpuClkLowFlag) {
 		system_clock_set_normal();
+		for (int i = 0; i<10000; i++);
 	}
-
-	for (int i = 0; i<10000; i++);
 }
 
 HAL_StatusTypeDef sda_sdio_hw_init() {
@@ -165,69 +164,43 @@ DSTATUS disk_initialize(BYTE lun) {
 DSTATUS disk_status(BYTE lun)
 {
 	(void)(lun);
-  /*Stat = STA_NOINIT;
-
+	//Stat = STA_NOINIT;
+  /*
+   * enabling this leads to performance regression...
   if(HAL_SD_GetCardState(&mainSD) == HAL_SD_CARD_TRANSFER)
   {
     Stat &= ~STA_NOINIT;
-    printf("stat FAIL\n");
+    //printf("stat FAIL\n");
   }
   
-  if (Stat != 0) {
-  	printf("stat not OK\n");
-  }*/
+  //if (Stat != 0) {
+  //	printf("stat not OK\n");
+  //}
+  */
 
   return Stat;
 }
 
-/**
-  * @brief  Reads Sector(s)
-  * @param  lun : not used
-  * @param  *buff: Data buffer to store read data
-  * @param  sector: Sector address (LBA)
-  * @param  count: Number of sectors to read (1..128)
-  * @retval DRESULT: Operation result
-  */ /*
-DRESULT disk_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
-{
-  DRESULT res = RES_ERROR;
-  uint32_t timeout = 100000;
-  uint8_t ok = 0;
 
-  mainSD.ErrorCode = 0;
-	if(HAL_SD_ReadBlocks(&mainSD, buff,(uint32_t) (sector), count, 1000000) == HAL_OK) {
-		ok = 1;
-		//printf("got %u\n", *buff);
-		res = RES_OK;
-	} else {
-		printf ("read failed (%u) (sector: %u, count: %u)\n",mainSD.ErrorCode, sector, count);
-	}
-  
-  return res;
-}*/
 DRESULT disk_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
 	(void)(lun);
-    DRESULT  res;
+    DRESULT  res = RES_ERROR;
     uint32_t timeout = 0;
     SD_setSpeedHi();
     res = RES_ERROR;
-    if(HAL_SD_ReadBlocks(&mainSD, buff,(uint32_t) (sector), count, 10000000) == HAL_OK)
-    {
-        /* Wait until the read operation is finished */
+    if(HAL_SD_ReadBlocks(&mainSD, buff,(uint32_t) (sector), count, 10000000) == HAL_OK) {
 
-        while(timeout++ != 10000000)
-        {
-        		//printf("loop?\n");
-            if(HAL_SD_GetCardState(&mainSD) == HAL_SD_CARD_TRANSFER )
-            {
-                return RES_OK;
-            } else {
+      /* Wait until the read operation is finished */
+        while(HAL_SD_GetCardState(&mainSD) != HAL_SD_CARD_TRANSFER) {
+            if(timeout > 100000){
             	printf ("read failed (%u) (sector: %u, count: %u)\n",(unsigned int)mainSD.ErrorCode, (unsigned int)sector, (unsigned int)count);
+            	return RES_ERROR;
             }
+            timeout++;
         }
+        return RES_OK;
     }
-
     return res;
 }
 
@@ -251,14 +224,12 @@ DRESULT disk_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
         count, 1000000) == HAL_OK) {
 			res = RES_OK;
 
-			while(timeout++ != 10000000)
-			        {
+			while(timeout++ != 10000000) {
 			        		//printf("loop?\n");
-			            if(HAL_SD_GetCardState(&mainSD) == HAL_SD_CARD_TRANSFER )
-			            {
+			            if(HAL_SD_GetCardState(&mainSD) == HAL_SD_CARD_TRANSFER) {
 			                return RES_OK;
 			            }
-			        }
+			 }
 		} else {
 			printf ("write failed (%u) (sector: %u, count: %u)\n",(unsigned int)mainSD.ErrorCode, (unsigned int)sector, (unsigned int)count);
 		}
@@ -329,6 +300,10 @@ DWORD get_fattime()
 	return (svpSGlobal.year-1980)<<25 | svpSGlobal.month<<21 | svpSGlobal.day<<16 | \
 				(svpSGlobal.hour)<<11 | (svpSGlobal.min)<<5 | (svpSGlobal.sec/2%30);
 
+}
+
+void sd_wait_for_ready() {
+  while(HAL_SD_GetCardState(&mainSD) != HAL_SD_CARD_TRANSFER) {}
 }
 
 #endif

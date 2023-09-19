@@ -108,7 +108,7 @@ uint8_t svp_fseek(svp_file *fp, uint32_t offset) {
 
 uint32_t svp_get_size(svp_file *fp) {
 
-  return f_size (&(fp->fPointer));
+  return f_size(&(fp->fPointer));
 
 }
 

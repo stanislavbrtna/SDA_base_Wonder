@@ -53,7 +53,7 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
 
 /* Generic command (Not used by FatFs) */
 #define CTRL_POWER			5	/* Get/Set power status */
-#define CTRL_LOCK			6	/* Lock/Unlock media removal */
+#define CTRL_LOCK		  	6	/* Lock/Unlock media removal */
 #define CTRL_EJECT			7	/* Eject media */
 #define CTRL_FORMAT			8	/* Create physical format on the media */
 
