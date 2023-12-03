@@ -7,5 +7,5 @@ void updateTouchScreen();
 void measureBatteryVoltage();
 void show_splash();
 void lcd_bw_test();
-void sda_hw_sleep();
+void wonder_lcd_sleep();
 void tick_update_status_led();

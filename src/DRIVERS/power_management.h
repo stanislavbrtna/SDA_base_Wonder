@@ -10,7 +10,7 @@
 
 #include "../sda_platform.h"
 
-void sda_sleep();
+void wonder_enter_sleep();
 void lowBattCheckAndHalt();
 
 

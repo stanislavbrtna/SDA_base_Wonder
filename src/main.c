@@ -63,33 +63,23 @@ void SysTick_Handler(void) {
 	svsLoadCounter++;
 	svpSGlobal.uptimeMs++;
 
-	if (Lcd_on_flag > 1){
-		Lcd_on_flag--;
-	}
-
-	if (Lcd_on_flag == 1) {
-		Lcd_on_flag = 0;
-		lcd_bl_on();
-		svp_set_backlight(svpSGlobal.lcdBacklight);
-		if (Lcd_off_flag == 0) {
-			setRedrawFlag();
-		}
-	}
-
 	sda_base_spkr_irq_handler();
+
+  lcd_handler();
+
+  tick_update_status_led();
 
 	if (tick_lock == SDA_LOCK_UNLOCKED) {
 		counter++;
 
 		static uint32_t pwrLongPressCnt;
 		// Power on with just press
-		if((HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET) && (pwrBtnPrev == 0)) {
+		if((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET) && (pwrBtnPrev == 0)) {
 			if (svpSGlobal.lcdState == LCD_OFF) {
-				svp_set_lcd_state(LCD_ON);
-				system_clock_set_normal();
-				powerOnLck = 1;
-				svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
-				pwrLongPressCnt = 0;
+        svp_set_lcd_state(LCD_ON);
+  		  powerOnLck = 1;
+			  svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
+			  pwrLongPressCnt = 0;	
 			}
 		}
 		// pwr long press detection
@@ -120,8 +110,6 @@ void SysTick_Handler(void) {
 
 		tick_update_buttons();
 
-		tick_update_status_led();
-
 		if (irq_lock == SDA_LOCK_UNLOCKED) {
 			irq_lock = SDA_LOCK_LOCKED;
 			update_power_status();
@@ -133,20 +121,6 @@ void SysTick_Handler(void) {
 				rtc_update_struct();
 
 				sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
-
-				if(rtc.sec != oldsec) {
-					if (Lcd_off_flag > 1) {
-						Lcd_off_flag--;
-					}
-
-					if (Lcd_off_flag == 1) {
-						Lcd_off_flag = 0;
-						if(svpSGlobal.lcdState == LCD_OFF) {
-							sda_hw_sleep();
-						}
-					}
-				}
-				oldsec = rtc.sec;
 				measureBatteryVoltage();
 			}
 
@@ -165,6 +139,30 @@ void SysTick_Handler(void) {
 		// counter for use inside SVS apps
 		if (sdaAppCounter > 0) {
 			sdaAppCounter--;
+		}
+	}
+}
+
+void lcd_handler () {
+  if (Lcd_off_flag > 1) {
+    Lcd_off_flag--;
+  }
+
+  if (Lcd_off_flag == 1) {
+    Lcd_off_flag = 0;
+    wonder_lcd_sleep();
+  }
+
+  if (Lcd_on_flag > 1){
+		Lcd_on_flag--;
+	}
+
+	if (Lcd_on_flag == 1) {
+		Lcd_on_flag = 0;
+		lcd_bl_on();
+		svp_set_backlight(svpSGlobal.lcdBacklight);
+		if (Lcd_off_flag == 0) {
+			setRedrawFlag();
 		}
 	}
 }
@@ -260,7 +258,7 @@ int main() {
 		// Sleep mode handling
 		if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0 && sdaWakeupFlag == 0) {
 			tick_lock = SDA_LOCK_LOCKED;
-			sda_sleep();
+			wonder_enter_sleep();
 			// update time
 			rtc_update_struct();
 			sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);

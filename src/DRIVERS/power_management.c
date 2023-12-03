@@ -37,7 +37,7 @@ extern uint32_t uptimeSleepStart;
 void sd_wait_for_ready();
 
 
-void sda_sleep() { // should be called when tick is locked
+void wonder_enter_sleep() { // should be called when tick is locked
   touchSleep();
   if(cpuClkLowFlag == 0) {
     system_clock_set_low();
@@ -121,7 +121,7 @@ void update_power_status() {
 }
 
 
-void sda_hw_sleep() {
+void wonder_lcd_sleep() {
   uptimeSleepStart = (uint32_t) svpSGlobal.timestamp - svpSGlobal.uptime;
   lcd_hw_sleep();
 }

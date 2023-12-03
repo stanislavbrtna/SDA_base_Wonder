@@ -36,12 +36,14 @@ void led_set_pattern(ledPatternType pat) {
     for (x = 0; x < 10; x++) {
       led_pattern[x] = 1;
     }
+    sda_set_led(1);
   }
 
   if (pat == LED_OFF) {
     for (x = 0; x < 10; x++) {
       led_pattern[x] = 0;
     }
+    sda_set_led(0);
   }
 
   if (pat == LED_BLINK) {
@@ -222,12 +224,14 @@ void svp_set_lcd_state(lcdStateType state) {
 	if(state == LCD_ON) {
 		system_clock_set_normal();
 		lcd_hw_wake();
-		Lcd_on_flag = 200;
+		Lcd_on_flag  = 200;
+    Lcd_off_flag = 0;
 	} else if (state == LCD_OFF) {
 		lcd_bl_off();
 		Lcd_off_flag = 30;
+    Lcd_on_flag  = 0;
 	}
-	svpSGlobal.lcdState = state;
+  svpSGlobal.lcdState = state;
 }
 
 void svp_set_backlight(uint8_t val) {
@@ -270,6 +274,10 @@ static void reload_clock_sensitive_stuff() {
 }
 
 void system_clock_set_low(void) {
+
+  if(cpuClkLowFlag == 1) {
+    return;
+  }
 	// Enable Power Control clock
 	__PWR_CLK_ENABLE();
 
@@ -316,6 +324,11 @@ void system_clock_set_low(void) {
 }
 
 void system_clock_set_normal(void) {
+
+  if(cpuClkLowFlag == 0) {
+    return;
+  }
+
 	HAL_RCC_DeInit();
 	SystemClock_Config();
 	SystemCoreClockUpdate();

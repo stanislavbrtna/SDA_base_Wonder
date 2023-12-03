@@ -219,9 +219,8 @@ void lcd_bw_test() {
 
 
 // led pattern array
-uint8_t led_pattern[10];
+volatile uint8_t led_pattern[10];
 uint16_t led_counter;
-
 
 void tick_update_status_led() {
   static uint8_t led_state;
