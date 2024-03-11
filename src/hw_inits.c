@@ -188,40 +188,40 @@ void sda_internal_pin_def(uint8_t pinNum, uint8_t pinType, uint8_t pull) {
 			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_15, pinType, pull);
 			break;
 		case 2  :
-			sda_internal_pin_def_hw(GPIOB, GPIO_PIN_15, pinType, pull);
-			break;
-		case 3  :
 			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_14, pinType, pull);
 			break;
-		case 4  :
-			sda_internal_pin_def_hw(GPIOB, GPIO_PIN_14, pinType, pull);
-			break;
-		case 5  :
+		case 3  :
 			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_13, pinType, pull);
 			break;
-		case 6  :
-			sda_internal_pin_def_hw(GPIOB, GPIO_PIN_13, pinType, pull);
-			break;
-		case 7  :
+		case 4  :
 			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_12, pinType, pull);
 			break;
-		case 9  :
+		case 5  :
 			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_11, pinType, pull);
 			break;
-		case 11  :
+		case 6  :
 			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_10, pinType, pull);
 			break;
-		case 12  :
-			sda_internal_pin_def_hw(GPIOE, GPIO_PIN_12, pinType, pull);
-			break;
-		case 13  :
+		case 7  :
 			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_9, pinType, pull);
 			break;
+		case 8  :
+			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_8, pinType, pull);
+			break;
+		case 9  :
+			sda_internal_pin_def_hw(GPIOB, GPIO_PIN_15, pinType, pull);
+			break;
+		case 10  :
+			sda_internal_pin_def_hw(GPIOB, GPIO_PIN_14, pinType, pull);
+			break;
+		case 11  :
+			sda_internal_pin_def_hw(GPIOB, GPIO_PIN_13, pinType, pull);
+			break;
 		case 14  :
-			sda_internal_pin_def_hw(GPIOE, GPIO_PIN_13, pinType, pull);
+			sda_internal_pin_def_hw(GPIOE, GPIO_PIN_12, pinType, pull);
 			break;
 		case 15  :
-			sda_internal_pin_def_hw(GPIOD, GPIO_PIN_8, pinType, pull);
+			sda_internal_pin_def_hw(GPIOE, GPIO_PIN_13, pinType, pull);
 			break;
 		case 16  :
 			sda_internal_pin_def_hw(GPIOE, GPIO_PIN_14, pinType, pull);
@@ -244,40 +244,40 @@ void sda_internal_pin_set(uint8_t pinNum, uint8_t val) {
 			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_15, pinval);
 			break;
 		case 2  :
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, pinval);
-			break;
-		case 3  :
 			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, pinval);
 			break;
-		case 4  :
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, pinval);
-			break;
-		case 5  :
+		case 3  :
 			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, pinval);
 			break;
-		case 6  :
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, pinval);
-			break;
-		case 7  :
+		case 4  :
 			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, pinval);
 			break;
-		case 9  :
+		case 5  :
 			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, pinval);
 			break;
-		case 11  :
+		case 6  :
 			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, pinval);
 			break;
-		case 12  :
-			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_12, pinval);
-			break;
-		case 13  :
+		case 7  :
 			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_9, pinval);
 			break;
+		case 8  :
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_8, pinval);
+			break;
+		case 9  :
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, pinval);
+			break;
+		case 10  :
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, pinval);
+			break;
+		case 11  :
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, pinval);
+			break;
 		case 14  :
-			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, pinval);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_12, pinval);
 			break;
 		case 15  :
-			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_8, pinval);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, pinval);
 			break;
 		case 16  :
 			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, pinval);
