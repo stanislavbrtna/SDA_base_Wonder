@@ -21,7 +21,7 @@ void MX_USART3_UART_Init(void) {
 
 
   if (HAL_UART_Init(&huart3) != HAL_OK) {
-    //Error_Handler();
+    printf("Usart3 MX init error!!\n");
   }
 #ifdef USART3_DBG
   printf("usart3 init ok\n");
@@ -37,23 +37,22 @@ void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle) {
 	/* Peripheral clock enable */
 	__HAL_RCC_USART3_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
-
 	/**USART2 GPIO Configuration
 	PB10     ------> USART2_TX
 	PB11     ------> USART2_RX
 	*/
 
 	HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
-
 	GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
 	GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(USART3_IRQn);
 
+	HAL_NVIC_SetPriority(USART3_IRQn, 1, 1);
+	NVIC_ClearPendingIRQ(USART3_IRQn); // without this the thing borks...
+	HAL_NVIC_EnableIRQ(USART3_IRQn);
 }
 
   
@@ -171,29 +170,29 @@ uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 
 
 static uint8_t usart3_buff[512];
-static volatile uint16_t usart3_buff_n;
-static volatile uint8_t usart3_c[10];
+static uint16_t usart3_buff_n;
+static uint8_t usart3_c;
 static volatile uint8_t usart3_DR;
 
 uint8_t uart3_recieve_IT() {
-
-  usart3_c[1] = 0;
+  usart3_c = 0;
   usart3_DR = 0;
   usart3_buff_n = 0;
-  HAL_UART_AbortReceive_IT(&huart3);
+
 
   if (!sdaSerialEnabled) {
     sda_serial_enable();
   }
 
+  HAL_UART_AbortReceive_IT(&huart3);
+  NVIC_ClearPendingIRQ(USART3_IRQn);
   it_rcv_enabled = 1;
 
   for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
     usart3_buff[i] = 0;
   }
-
   HAL_StatusTypeDef h;
-  h = HAL_UART_Receive_IT(&huart3, usart3_c, 1);
+  h = HAL_UART_Receive_IT(&huart3, &usart3_c, 1);
 
   if(h == HAL_ERROR) {
     printf("serial rcv init error\n");
@@ -220,20 +219,25 @@ uint16_t uart3_get_str(uint8_t *str) {
   sdaLockState l;
   if (usart3_DR) {
     l = tick_lock;
+
+    //printf("uart3_get_str dbg n: %u, dr: %u, buffer: %s\n", usart3_buff_n, usart3_DR, usart3_buff);
+
     tick_lock = SDA_LOCK_LOCKED;
+    while(NVIC_GetPendingIRQ(USART3_IRQn));
+
     HAL_NVIC_DisableIRQ(USART3_IRQn);
-    for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
+    uint32_t i;
+    for(i = 0; i < (uint32_t)(usart3_buff_n); i++) {
       str[i] = usart3_buff[i];
     }
+    str[i] = 0;
 
     r = usart3_buff_n;
 
     usart3_DR = 0;
     usart3_buff_n = 0;
-    usart3_c[0] = 0;
-    for(uint32_t i = 0; i < sizeof(usart3_buff); i++) {
-      usart3_buff[i] = 0;
-    }
+    usart3_c = 0;
+    //NVIC_ClearPendingIRQ();
     HAL_NVIC_EnableIRQ(USART3_IRQn);
     tick_lock = l;
     return r;
@@ -256,20 +260,36 @@ extern volatile uint8_t usart2_DR;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart->Instance == USART3) {
-
-      usart3_buff[usart3_buff_n] = usart3_c[0];
+      usart3_buff[usart3_buff_n] = usart3_c;
       usart3_buff_n++;
-      if (usart3_buff_n > sizeof(usart3_buff) - 1) {
+      if (usart3_buff_n > (uint16_t)(sizeof(usart3_buff) - 1)) {
         usart3_buff_n = 0;
+        printf("USART OVERRUN!\n");
       }
-      if (usart3_c[0] == '\n') {
+      if (usart3_c == '\n') {
         usart3_DR = 2;
       } else {
         if (usart3_DR == 0) {
           usart3_DR = 1;
         }
       }
-    HAL_UART_Receive_IT(&huart3, usart3_c, 1);
+
+      HAL_StatusTypeDef h;
+      // hal uart transmit sometimes locks the uart and timeouts,
+      // so it can't continue with receive
+      // and the whole thing would bork, old hal libs perhaps? dunno
+      __HAL_UNLOCK(huart);
+      while(h != HAL_OK) {
+        h = HAL_UART_Receive_IT(&huart3, &usart3_c, 1);
+
+        if(h == HAL_ERROR) {
+          printf("serial rcv init error\n");
+        }
+
+        if(h == HAL_BUSY) {
+          printf("serial rcv init error busy(state: %u lock: %u) \n", huart->RxState, huart->Lock);
+        }
+      }
   }
 
   if (huart->Instance == USART2) {
@@ -286,6 +306,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
             usart2_DR = 1;
           }
         }
+      __HAL_UNLOCK(huart); // will do the same here...
       HAL_UART_Receive_IT(&huart2, usart2_c, 1);
     }
 }
