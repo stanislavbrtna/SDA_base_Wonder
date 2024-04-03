@@ -45,19 +45,17 @@ void Delay(__IO uint32_t nCount);
 void beep_timer_init();
 void rrand_init();
 
+void power_button_handler();
+void lcd_handler ();
+
 void Delay(__IO uint32_t nCount) {
   for(; nCount != 0; nCount--);
 }
 
 
-/*=========================== The SysTick Monster ===========================*/
-
+// Systick
 void SysTick_Handler(void) {
 	static uint16_t sec;
-	static uint8_t oldsec;
-
-	static uint8_t powerOnLck;
-  static uint8_t pwrBtnPrev;
 
 	HAL_IncTick();
 	svsLoadCounter++;
@@ -69,44 +67,15 @@ void SysTick_Handler(void) {
 
   tick_update_status_led();
 
+  power_button_handler();
+
+  // counter for use inside SVS apps
+  if (sdaAppCounter > 0) {
+    sdaAppCounter--;
+  }
+
 	if (tick_lock == SDA_LOCK_UNLOCKED) {
 		counter++;
-
-		static uint32_t pwrLongPressCnt;
-		// Power on with just press
-		if((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET) && (pwrBtnPrev == 0)) {
-			if (svpSGlobal.lcdState == LCD_OFF) {
-        svp_set_lcd_state(LCD_ON);
-  		  powerOnLck = 1;
-			  svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
-			  pwrLongPressCnt = 0;	
-			}
-		}
-		// pwr long press detection
-		if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET && svpSGlobal.lcdState == LCD_ON) {
-			pwrLongPressCnt++;
-		}
-
-		if (pwrLongPressCnt == 1500) {
-			svpSGlobal.systemPwrLongPress = 1;
-		}
-
-		if((HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET) && (pwrBtnPrev == 1)) {
-			if (pwrLongPressCnt > 1500) {
-				pwrLongPressCnt = 0;
-			} else {
-				if (powerOnLck) {
-					powerOnLck = 0;
-				} else {
-					// power off with release
-					if (svpSGlobal.lcdState == LCD_ON) {
-						svp_set_lcd_state(LCD_OFF);
-					}
-				}
-			}
-		}
-		sdaWakeupFlag = 0; // button was handled
-		pwrBtnPrev = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
 
 		tick_update_buttons();
 
@@ -117,7 +86,7 @@ void SysTick_Handler(void) {
 				sec++;
 			} else {
 				sec = 0;
-				//event update času
+				// time update event
 				rtc_update_struct();
 
 				sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
@@ -135,13 +104,50 @@ void SysTick_Handler(void) {
 			}
 			irq_lock = SDA_LOCK_UNLOCKED;
 		}
-
-		// counter for use inside SVS apps
-		if (sdaAppCounter > 0) {
-			sdaAppCounter--;
-		}
 	}
 }
+
+
+void power_button_handler() {
+  static uint8_t powerOnLck;
+  static uint8_t pwrBtnPrev;
+  static uint32_t pwrLongPressCnt;
+   // Power on with just press
+   if((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET) && (pwrBtnPrev == 0)) {
+     if (svpSGlobal.lcdState == LCD_OFF) {
+       svp_set_lcd_state(LCD_ON);
+       powerOnLck = 1;
+       svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
+       pwrLongPressCnt = 0;
+     }
+   }
+   // pwr long press detection
+   if (HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET && svpSGlobal.lcdState == LCD_ON) {
+     pwrLongPressCnt++;
+   }
+
+   if (pwrLongPressCnt == 1500) {
+     svpSGlobal.systemPwrLongPress = 1;
+   }
+
+   if((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_RESET) && (pwrBtnPrev == 1)) {
+     if (pwrLongPressCnt > 1500) {
+       pwrLongPressCnt = 0;
+     } else {
+       if (powerOnLck) {
+         powerOnLck = 0;
+       } else {
+         // power off with release
+         if (svpSGlobal.lcdState == LCD_ON) {
+           svp_set_lcd_state(LCD_OFF);
+         }
+       }
+     }
+   }
+   sdaWakeupFlag = 0; // button was handled
+   pwrBtnPrev = HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN);
+}
+
 
 void lcd_handler () {
   if (Lcd_off_flag > 1) {

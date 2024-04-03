@@ -39,6 +39,7 @@ void sd_wait_for_ready();
 
 void wonder_enter_sleep() { // should be called when tick is locked
   touchSleep();
+  uart3_sleep();
   if(cpuClkLowFlag == 0) {
     system_clock_set_low();
   }
