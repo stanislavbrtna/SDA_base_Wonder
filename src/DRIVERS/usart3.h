@@ -24,6 +24,8 @@ void uart3_set_speed(uint32_t bd);
 void uart3_wake_up();
 void uart3_sleep();
 
+uint8_t uart3_get_spec();
+
 #endif 
 
 

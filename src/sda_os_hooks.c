@@ -150,6 +150,10 @@ uint16_t sda_serial_get_str(uint8_t *str) {
   return uart3_get_str(str);
 }
 
+uint8_t sda_serial_get_spec() {
+  return uart3_get_spec();
+}
+
 
 //=============================================================================
 // USB serial port (uart2)

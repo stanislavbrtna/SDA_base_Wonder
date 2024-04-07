@@ -86,10 +86,11 @@ void uart3_wake_up() {
 
 }
 
-static uint8_t usart3_buff[512];
+static uint8_t  usart3_buff[512];
 static uint16_t usart3_buff_n;
-static uint8_t usart3_c;
+static uint8_t  usart3_c;
 static volatile uint8_t usart3_DR;
+static volatile uint8_t usart3_SPEC;
 
 void uart3_sleep() {
   if(it_rcv_enabled) {
@@ -100,6 +101,12 @@ void uart3_sleep() {
     usart3_c  = 0;
     usart3_DR = 0;
   }
+}
+
+uint8_t uart3_get_spec() {
+  uint8_t r = usart3_SPEC;
+  usart3_SPEC = 0;
+  return r;
 }
 
 void uart3_set_default_speed() {
@@ -277,7 +284,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         usart3_buff_n = 0;
         //printf("USART OVERRUN!\n");
       }
-      if (usart3_c == '\n') {
+      if (usart3_c == 17) {
+        usart3_SPEC = 1;
+      } else if (usart3_c == '\n') {
         usart3_DR = 2;
       } else {
         if (usart3_DR == 0) {
