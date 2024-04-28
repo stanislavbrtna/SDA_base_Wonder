@@ -83,6 +83,7 @@ static void lcd_send_data_d(uint8_t data);
 
 void lcd_Init_Seq_9486();
 void lcd_Init_Seq_9481_b();
+void lcd_Init_Seq_9488();
 
 void lcd_Init_Seq_9481();
 
@@ -91,9 +92,11 @@ uint8_t lcd_hw_init(){
 	lcd_set_RD_high();
 	lcd_set_RS_high();
 #ifdef LCD_TYPE_B
-	lcd_Init_Seq_9481_b();
+	lcd_Init_Seq_9488();
+	//lcd_Init_Seq_9481_b();
 #else
-	lcd_Init_Seq_9486();
+	//lcd_Init_Seq_9488();
+	lcd_Init_Seq_9486(); //standard
 #endif
 	return 0;
 }
@@ -381,8 +384,47 @@ void lcd_Init_Seq_9488(){
 	lcd_set_RD_high();
   lcd_set_CS_low();
 
+  /* one more gamma curve from the internetz
+   //POSITIVE GAMMA CORRECTION
+  ILI9488_Write_Command(0xE0);
+  ILI9488_Write_Data(0x00);
+  ILI9488_Write_Data(0x07);
+  ILI9488_Write_Data(0x0f);
+  ILI9488_Write_Data(0x0D);
+  ILI9488_Write_Data(0x1B);
+  ILI9488_Write_Data(0x0A);
+  ILI9488_Write_Data(0x3c);
+  ILI9488_Write_Data(0x78);
+  ILI9488_Write_Data(0x4A);
+  ILI9488_Write_Data(0x07);
+  ILI9488_Write_Data(0x0E);
+  ILI9488_Write_Data(0x09);
+  ILI9488_Write_Data(0x1B);
+  ILI9488_Write_Data(0x1e);
+  ILI9488_Write_Data(0x0f);
+
+  //NEGATIVE GAMMA CORRECTION
+  ILI9488_Write_Command(0xE1);
+  ILI9488_Write_Data(0x00);
+  ILI9488_Write_Data(0x22);
+  ILI9488_Write_Data(0x24);
+  ILI9488_Write_Data(0x06);
+  ILI9488_Write_Data(0x12);
+  ILI9488_Write_Data(0x07);
+  ILI9488_Write_Data(0x36);
+  ILI9488_Write_Data(0x47);
+  ILI9488_Write_Data(0x47);
+  ILI9488_Write_Data(0x06);
+  ILI9488_Write_Data(0x0a);
+  ILI9488_Write_Data(0x07);
+  ILI9488_Write_Data(0x30);
+  ILI9488_Write_Data(0x37);
+  ILI9488_Write_Data(0x0f);
+  */
+
+
 	lcd_Delay(50);
-  lcd_send_cmd_d(0xE0);
+  lcd_send_cmd_d(0xE0); // gamma settings too dark, use those from 9486
 	lcd_send_data(0x00);
 	lcd_send_data(0x03);
 	lcd_send_data(0x09);
@@ -520,7 +562,7 @@ inline void lcd_send_data(uint8_t data) {
 
 	lcd_set_WR_low();
 #ifdef LCD_TYPE_B
-	lcd_Delay(1);
+	lcd_Delay(10);
 #endif
 	lcd_set_WR_high();
 
@@ -548,7 +590,9 @@ inline void lcd_send_cmd(uint8_t data) {
 	LCD_DAT_PORT->ODR |= data;
 
 	lcd_set_WR_low();
-	//lcd_Delay(5);
+#ifdef LCD_TYPE_B
+  lcd_Delay(10);
+#endif
 	lcd_set_WR_high();
   lcd_set_RS_high();
 }
