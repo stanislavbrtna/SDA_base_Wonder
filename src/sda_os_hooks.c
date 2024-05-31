@@ -7,7 +7,6 @@ extern RNG_HandleTypeDef rng;
 extern uint8_t led_pattern[10];
 extern uint16_t led_counter;
 extern volatile uint8_t cpuClkLowFlag;
-extern uint8_t beep_flag;
 extern volatile sdaLockState tick_lock;
 
 extern volatile uint8_t Lcd_on_flag;
@@ -266,17 +265,6 @@ float sda_get_battery_voltage() {
 //=============================================================================
 // System clock settings
 
-static void reload_clock_sensitive_stuff() {
-  lcd_bl_timer_OC_update();
-
-  uart3_wake_up();
-  uart2_wake_up();
-
-  if (beep_flag) {
-    sda_base_beep_start();
-  }
-}
-
 void system_clock_set_low(void) {
 
   if(cpuClkLowFlag == 1) {
@@ -336,8 +324,6 @@ void system_clock_set_normal(void) {
 	HAL_RCC_DeInit();
 	SystemClock_Config();
 	SystemCoreClockUpdate();
-
-	reload_clock_sensitive_stuff();
 
 	cpuClkLowFlag = 0;
 }

@@ -9,3 +9,4 @@ void show_splash();
 void lcd_bw_test();
 void wonder_lcd_sleep();
 void tick_update_status_led();
+void reload_clock_sensitive_stuff();

@@ -462,11 +462,11 @@ float sda_external_ADC_get() {
 	adcChannel.Offset = 0;
 
 	if(HAL_ADC_Init(&g_AdcHandle2) != HAL_OK) {
-		printf("external adc: hal init FAIL\n");
+		printf("%s: hal init FAIL\n", __FUNCTION__);
 	}
 
 	if (HAL_ADC_ConfigChannel(&g_AdcHandle2, &adcChannel) != HAL_OK) {
-		printf("batt_dbg: hal channel 1 init FAIL\n");
+		printf("%s: hal channel 1 init FAIL\n", __FUNCTION__);
 	}
 
 	HAL_GPIO_DeInit(GPIOA, GPIO_PIN_6);

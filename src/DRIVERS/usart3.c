@@ -42,6 +42,7 @@ void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle) {
 	PB11     ------> USART2_RX
 	*/
 
+	/*
 	HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
 	GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -49,6 +50,7 @@ void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle) {
 	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
 	GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	*/
 
 	HAL_NVIC_SetPriority(USART3_IRQn, 1, 1);
 	NVIC_ClearPendingIRQ(USART3_IRQn); // without this the thing borks...
@@ -60,7 +62,7 @@ void MX_USART3_UART_DeInit(void){
     huart3.Instance = USART3;
     __HAL_RCC_USART3_CLK_DISABLE();
   
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
+    //HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
 
 }
     
@@ -68,22 +70,8 @@ void HAL_UART3_MspDeInit(UART_HandleTypeDef* uartHandle){
   if(uartHandle->Instance == USART3) {
     __HAL_RCC_USART3_CLK_DISABLE();
     HAL_NVIC_DisableIRQ(USART3_IRQn);
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
+    //HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
   }
-}
-
-void uart3_wake_up() {
-  if (!sdaSerialEnabled) {
-    return;
-  }
-
-  HAL_UART3_MspInit(&huart3);
-  MX_USART3_UART_Init();
-
-  if(it_rcv_enabled) {
-    uart3_recieve_IT();
-  }
-
 }
 
 static uint8_t  usart3_buff[512];
@@ -97,11 +85,34 @@ void uart3_sleep() {
     HAL_UART_AbortReceive_IT(&huart3);
     NVIC_ClearPendingIRQ(USART3_IRQn);
     HAL_NVIC_DisableIRQ(USART3_IRQn);
-    usart3_buff_n = 0;
     usart3_c  = 0;
-    usart3_DR = 0;
   }
 }
+
+void uart3_wake_up() {
+  if (!sdaSerialEnabled) {
+    return;
+  }
+
+  HAL_UART3_MspInit(&huart3);
+  MX_USART3_UART_Init();
+
+  if(it_rcv_enabled) {
+    HAL_StatusTypeDef h;
+    h = HAL_UART_Receive_IT(&huart3, &usart3_c, 1);
+
+    if(h == HAL_ERROR) {
+      printf("serial rcv wakeup init error\n");
+      return;
+    }
+
+    if(h == HAL_BUSY) {
+      printf("serial rcv wakeup init error busy\n");
+      return;
+    }
+  }
+}
+
 
 uint8_t uart3_get_spec() {
   uint8_t r = usart3_SPEC;
@@ -222,7 +233,7 @@ uint8_t uart3_recieve_IT() {
     return 0;
   }
 
-  tick_lock = SDA_LOCK_UNLOCKED;
+  //tick_lock = SDA_LOCK_UNLOCKED;
   return 1;
 }
 

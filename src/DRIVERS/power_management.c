@@ -62,9 +62,11 @@ void wonder_enter_sleep() { // should be called when tick is locked
   // Wakeup
   system_clock_set_normal();
   HAL_ResumeTick();
+  reload_clock_sensitive_stuff();
   sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
   sd_wait_for_ready();
   touchWake();
+  uart3_wake_up();
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET);
   Delay(100000); // Wait for power to stabilize
 }

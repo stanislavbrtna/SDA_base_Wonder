@@ -247,3 +247,16 @@ void tick_update_status_led() {
     }
   }
 }
+
+extern uint8_t beep_flag;
+
+void reload_clock_sensitive_stuff() {
+  lcd_bl_timer_OC_update();
+
+  uart3_wake_up();
+  uart2_wake_up();
+
+  if (beep_flag) {
+    sda_base_beep_start();
+  }
+}
