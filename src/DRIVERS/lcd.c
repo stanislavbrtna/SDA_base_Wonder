@@ -47,6 +47,8 @@ static void LCD_Write_DATA(uint8_t x);
 static void setBacklight(TIM_HandleTypeDef timer, uint32_t channel, uint16_t pulse);
 
 void lcd_GPIO_Init();
+void lcd_GPIO_Init_input();
+void lcd_GPIO_Init_output();
 
 void writeRegister16(uint8_t x, uint16_t data);
 
@@ -78,8 +80,7 @@ static void lcd_send_data_d(uint8_t data);
  */
 
 
-//TODO: Add lcd panel type detection
-//#define LCD_TYPE_B
+uint8_t lcd_detect_type();
 
 void lcd_Init_Seq_9486();
 void lcd_Init_Seq_9481_b();
@@ -87,18 +88,92 @@ void lcd_Init_Seq_9488();
 
 void lcd_Init_Seq_9481();
 
+#define LCD_TYPE_9481 1
+#define LCD_TYPE_9488 2
+
+uint8_t LCD_type;
+uint8_t LCD_delay;
+
 uint8_t lcd_hw_init(){
 	lcd_GPIO_Init();
 	lcd_set_RD_high();
 	lcd_set_RS_high();
-#ifdef LCD_TYPE_B
-	lcd_Init_Seq_9488();
-	//lcd_Init_Seq_9481_b();
-#else
-	//lcd_Init_Seq_9488();
-	lcd_Init_Seq_9486(); //standard
-#endif
+	LCD_delay = 50;
+
+	LCD_type = lcd_detect_type();
+
+	printf("info: LCD_type: %u\n", LCD_type);
+
+
+	if (LCD_type == LCD_TYPE_9488) {
+	  // TODO: clean up the 9488 init seq.
+    LCD_delay = 50;
+    lcd_Init_Seq_9486(); //standard
+    LCD_delay = 0;
+	} else {
+	  LCD_delay = 50;
+    lcd_Init_Seq_9481_b();
+    LCD_delay = 1;
+	}
+
 	return 0;
+}
+
+uint8_t lcd_detect_type(){
+  // read ID
+  uint8_t d[8];
+  memset(d, 0, sizeof d);
+
+  lcd_set_RST_low();
+  lcd_Delay(300);
+  lcd_set_RST_high();
+  lcd_Delay(300);
+
+  lcd_send_cmd_d(0xBF); //ID4
+  lcd_GPIO_Init_input();
+  lcd_Delay(100);
+  lcd_set_RD_low();
+  lcd_Delay(100);
+  lcd_set_RD_high();
+  lcd_Delay(20);
+
+  for(uint16_t i=0; i<4; i++) {
+    lcd_set_RD_low();
+    lcd_Delay(100);
+    d[i] = LCD_DAT_PORT->IDR;
+    printf("LCD Data%u: %x\n", i, d[i]);
+    lcd_set_RD_high();
+    lcd_Delay(100);
+  }
+  lcd_GPIO_Init_output();
+
+  if(d[2] == 0x94 && d[3] == 0x81) {
+    return LCD_TYPE_9481;
+  }
+
+  lcd_send_cmd_d(0xD3); //ID4
+  lcd_GPIO_Init_input();
+  lcd_Delay(100);
+  lcd_set_RD_low();
+  lcd_Delay(100);
+  lcd_set_RD_high();
+  lcd_Delay(20);
+
+  for(uint16_t i=0; i<3; i++) {
+    lcd_set_RD_low();
+    lcd_Delay(10);
+    d[i] = LCD_DAT_PORT->IDR;
+    printf("LCD Data%u: %x\n", i, d[i]);
+    lcd_set_RD_high();
+    lcd_Delay(10);
+  }
+  lcd_GPIO_Init_output();
+
+  if(d[1] == 0x94 && d[2] == 0x88) {
+    return LCD_TYPE_9488;
+  }
+
+  return 0;
 }
 
 void lcd_hw_sleep() {
@@ -312,32 +387,44 @@ void lcd_Init_Seq_9481_b() {
   lcd_set_CS_low();
 
 	lcd_send_cmd_d(0x11);
-	lcd_Delay(20);
-	lcd_send_cmd_d(0xD0);
-	lcd_send_data_d(0x07);
-	lcd_send_data_d(0x42);
-	lcd_send_data_d(0x18);
+	lcd_Delay(80);
 
-	lcd_send_cmd_d(0xD1);
+	lcd_send_cmd_d(0xD0); // power settings
+	//lcd_send_data_d(0x07);
+	//lcd_send_data_d(0x42);
+	//lcd_send_data_d(0x18);
+
+	lcd_send_data_d(0x07);
+	lcd_send_data_d(0x41);
+	lcd_send_data_d(0x1D);
+
+	lcd_send_cmd_d(0xD1); // vcom
+	//lcd_send_data_d(0x00);
+	//lcd_send_data_d(0x07);
+	//lcd_send_data_d(0x10);
+
 	lcd_send_data_d(0x00);
-	lcd_send_data_d(0x07);
-	lcd_send_data_d(0x10);
+	lcd_send_data_d(0x14); // 2b 1f, 18 13 předtím, prožkuje
+	lcd_send_data_d(0x1b);
 
-	lcd_send_cmd_d(0xD2);
+	lcd_send_cmd_d(0xD2); // power setting normal mode
 	lcd_send_data_d(0x01);
-	lcd_send_data_d(0x02);
+	//lcd_send_data_d(0x02);
+	lcd_send_data_d(0x12); //11
 
-	lcd_send_cmd_d(0xC0);
+	lcd_send_cmd_d(0xC0); // panel driving settings
 	lcd_send_data_d(0x10);
 	lcd_send_data_d(0x3B);
 	lcd_send_data_d(0x00);
 	lcd_send_data_d(0x02);
 	lcd_send_data_d(0x11);
+	lcd_send_data_d(0x00);
 
-	lcd_send_cmd_d(0xC5);
-	lcd_send_data_d(0x03);
+	lcd_send_cmd_d(0xC5); // frame rate
+	lcd_send_data_d(0x03); //42hz
 
-	lcd_send_cmd_d(0xC8);
+
+	lcd_send_cmd_d(0xC8); // gamma
 	lcd_send_data_d(0x00);
 	lcd_send_data_d(0x32);
 	lcd_send_data_d(0x36);
@@ -350,29 +437,42 @@ void lcd_Init_Seq_9481_b() {
 	lcd_send_data_d(0x54);
 	lcd_send_data_d(0x0C);
 	lcd_send_data_d(0x00);
-
-	lcd_send_cmd_d(0x36);
+/*
+	lcd_send_data_d(0x00);
+  lcd_send_data_d(0x14);
+  lcd_send_data_d(0x33);
+  lcd_send_data_d(0x10);
+  lcd_send_data_d(0x00);
+  lcd_send_data_d(0x16);
+  lcd_send_data_d(0x44);
+  lcd_send_data_d(0x36);
+  lcd_send_data_d(0x77);
+  lcd_send_data_d(0x00);
+  lcd_send_data_d(0x0F);
+  lcd_send_data_d(0x00);
+*/
+	lcd_send_cmd_d(0x36); // set address mode
 	lcd_send_data_d(0x0A);
 
-	lcd_send_cmd_d(0x3A);
+	lcd_send_cmd_d(0x3A); // set pixel format
 	lcd_send_data_d(0x55);
 
-	lcd_send_cmd_d(0x2A);
+	lcd_send_cmd_d(0x2A);  // set_column_address
 	lcd_send_data_d(0x00);
 	lcd_send_data_d(0x00);
 	lcd_send_data_d(0x01);
 	lcd_send_data_d(0x3F);
 
-	lcd_send_cmd_d(0x2B);
+	lcd_send_cmd_d(0x2B); // set_page_address
 	lcd_send_data_d(0x00);
 	lcd_send_data_d(0x00);
 	lcd_send_data_d(0x01);
 	lcd_send_data_d(0xE0);
 
-	lcd_send_cmd_d(0x21);
+	lcd_send_cmd_d(0x21); // enter_invert_mode
 
 	lcd_Delay(120);
-	lcd_send_cmd_d(0x29);
+	lcd_send_cmd_d(0x29); // display on
 }
 
 void lcd_Init_Seq_9488(){
@@ -561,12 +661,10 @@ inline void lcd_send_data(uint8_t data) {
 	LCD_DAT_PORT->ODR |= data;
 
 	lcd_set_WR_low();
-#ifdef LCD_TYPE_B
-	lcd_Delay(10);
-#endif
+	if(LCD_delay) {
+	  lcd_Delay(2); //5
+	}
 	lcd_set_WR_high();
-
-	//LCD_DAT_PORT->ODR &= 0xFF00;
 }
 
 inline void lcd_send_data_d(uint8_t data) {
@@ -575,11 +673,7 @@ inline void lcd_send_data_d(uint8_t data) {
 	LCD_DAT_PORT->ODR |= data;
 
 	lcd_set_WR_low();
-#ifdef LCD_TYPE_B
-	lcd_Delay(30);
-#else
-	lcd_Delay(5);
-#endif
+  lcd_Delay(30); //30
 	lcd_set_WR_high();
 }
 
@@ -590,9 +684,11 @@ inline void lcd_send_cmd(uint8_t data) {
 	LCD_DAT_PORT->ODR |= data;
 
 	lcd_set_WR_low();
-#ifdef LCD_TYPE_B
-  lcd_Delay(10);
-#endif
+
+	if(LCD_delay) {
+	  lcd_Delay(30); //30
+	}
+
 	lcd_set_WR_high();
   lcd_set_RS_high();
 }
@@ -650,26 +746,46 @@ static void lcd_init_pin(GPIO_TypeDef *port, uint32_t pin) {
 	HAL_GPIO_Init(port, &GPIO_InitStructure);
 }
 
-void lcd_GPIO_Init() {
-	GPIO_InitTypeDef GPIO_InitStructure;
+void lcd_GPIO_Init_input() {
+  GPIO_InitTypeDef GPIO_InitStructure;
+  //Data pins are Px0 - Px7
+  GPIO_InitStructure.Pin = GPIO_PIN_0
+                          |GPIO_PIN_1
+                          |GPIO_PIN_2
+                          |GPIO_PIN_3
+                          |GPIO_PIN_4
+                          |GPIO_PIN_5
+                          |GPIO_PIN_6
+                          |GPIO_PIN_7;
+  GPIO_InitStructure.Mode  = GPIO_MODE_INPUT;
+  GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStructure.Pull  = GPIO_NOPULL;
+  HAL_GPIO_Init(LCD_DAT_PORT, &GPIO_InitStructure);
+}
 
+void lcd_GPIO_Init_output() {
+  GPIO_InitTypeDef GPIO_InitStructure;
+  //Data pins are Px0 - Px7
+  GPIO_InitStructure.Pin = GPIO_PIN_0
+                          |GPIO_PIN_1
+                          |GPIO_PIN_2
+                          |GPIO_PIN_3
+                          |GPIO_PIN_4
+                          |GPIO_PIN_5
+                          |GPIO_PIN_6
+                          |GPIO_PIN_7;
+  GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStructure.Pull  = GPIO_NOPULL;
+  HAL_GPIO_Init(LCD_DAT_PORT, &GPIO_InitStructure);
+}
+
+void lcd_GPIO_Init() {
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOE_CLK_ENABLE();
 
-	//Data pins are Px0 - Px7
-	GPIO_InitStructure.Pin = GPIO_PIN_0
-													|GPIO_PIN_1
-													|GPIO_PIN_2
-													|GPIO_PIN_3
-													|GPIO_PIN_4
-													|GPIO_PIN_5
-													|GPIO_PIN_6
-													|GPIO_PIN_7;
-	GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-	GPIO_InitStructure.Pull  = GPIO_NOPULL;
-	HAL_GPIO_Init(LCD_DAT_PORT, &GPIO_InitStructure);
+	lcd_GPIO_Init_output();
 
 	lcd_init_pin(LCD_RST_PORT, LCD_RST_PIN);
 	lcd_init_pin(LCD_CS_PORT, LCD_CS_PIN);
