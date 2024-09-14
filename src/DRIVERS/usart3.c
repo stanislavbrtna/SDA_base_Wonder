@@ -170,7 +170,7 @@ uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
 	         break;
 	       }
 	     }
-	   }else{
+	   } else {
 	     buff[i] = c;
 	     i++;
 	   }
