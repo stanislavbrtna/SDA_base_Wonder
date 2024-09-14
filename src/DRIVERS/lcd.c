@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <string.h>
 #include "lcd.h"
 
 //optimised GPIO manipulation macros
@@ -332,22 +333,22 @@ void lcd_Init_Seq_9486(){
 
 	// positive gamma
 	lcd_send_cmd_d(0xE0);
-		// defaut conf
-		lcd_send_data(0x00);
-		lcd_send_data(0x07);
-		lcd_send_data(0x0C);
-		lcd_send_data(0x05);
-		lcd_send_data(0x13);
-		lcd_send_data(0x09);
-		lcd_send_data(0x36);
-		lcd_send_data(0xAA);
-		lcd_send_data(0x46);
-		lcd_send_data(0x09);
-		lcd_send_data(0x10);
-		lcd_send_data(0x0D);
-		lcd_send_data(0x1A);
-		lcd_send_data(0x1E);
-		lcd_send_data(0x0F);
+    // defaut conf
+    lcd_send_data(0x00);
+    lcd_send_data(0x07);
+    lcd_send_data(0x0C);
+    lcd_send_data(0x05);
+    lcd_send_data(0x13);
+    lcd_send_data(0x09);
+    lcd_send_data(0x36);
+    lcd_send_data(0xAA);
+    lcd_send_data(0x46);
+    lcd_send_data(0x09);
+    lcd_send_data(0x10);
+    lcd_send_data(0x0D);
+    lcd_send_data(0x1A);
+    lcd_send_data(0x1E);
+    lcd_send_data(0x0F);
 
 	lcd_send_cmd_d(0xE1);
 		lcd_send_data(0x00);
@@ -390,13 +391,13 @@ void lcd_Init_Seq_9481_b() {
 	lcd_Delay(80);
 
 	lcd_send_cmd_d(0xD0); // power settings
-	//lcd_send_data_d(0x07);
-	//lcd_send_data_d(0x42);
-	//lcd_send_data_d(0x18);
-
 	lcd_send_data_d(0x07);
 	lcd_send_data_d(0x41);
 	lcd_send_data_d(0x1D);
+
+	//lcd_send_data_d(0x07); // too dark
+	  //lcd_send_data_d(0x42);
+	  //lcd_send_data_d(0x18);
 
 	lcd_send_cmd_d(0xD1); // vcom
 	//lcd_send_data_d(0x00);
@@ -668,12 +669,11 @@ inline void lcd_send_data(uint8_t data) {
 }
 
 inline void lcd_send_data_d(uint8_t data) {
-
   LCD_DAT_PORT->ODR &= 0xFF00;
 	LCD_DAT_PORT->ODR |= data;
 
 	lcd_set_WR_low();
-  lcd_Delay(30); //30
+  lcd_Delay(30);
 	lcd_set_WR_high();
 }
 
