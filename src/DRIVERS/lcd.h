@@ -79,6 +79,7 @@ SOFTWARE.
 
 // GR2 hooks
 uint8_t lcd_hw_init();
+void lcd_set_params(uint8_t gamma_mode, uint8_t invert);
 extern void lcd_hw_set_xy(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 extern void lcd_hw_Draw_Point(uint16_t color);
 

@@ -39,13 +39,11 @@ SOFTWARE.
 #define lcd_set_RD_low() do { LCD_RD_PORT->BSRR = (uint32_t)LCD_RD_PIN << 16; } while (0)
 #define lcd_set_RD_high() do { LCD_RD_PORT->BSRR = LCD_RD_PIN; } while (0)
 
-TIM_HandleTypeDef blTimer;
-
 // internal functions headers
 inline void lcd_Delay(__IO uint32_t nCount);
 static void LCD_Write_COM(uint8_t x);
 static void LCD_Write_DATA(uint8_t x);
-static void setBacklight(TIM_HandleTypeDef timer, uint32_t channel, uint16_t pulse);
+
 
 void lcd_GPIO_Init();
 void lcd_GPIO_Init_input();
@@ -53,11 +51,12 @@ void lcd_GPIO_Init_output();
 
 void writeRegister16(uint8_t x, uint16_t data);
 
-//actual send function
+// send data/cmd functions
 inline void lcd_send_data(uint8_t data)  __attribute__((always_inline));
 inline void lcd_send_cmd(uint8_t data) __attribute__((always_inline));
 
-void lcd_send_cmd_d(uint8_t data); // send with delay
+// same functions with delay
+void lcd_send_cmd_d(uint8_t data); 
 static void lcd_send_data_d(uint8_t data);
 
 /*
@@ -72,12 +71,6 @@ static void lcd_send_data_d(uint8_t data);
  * void lcd_hw_sleep();
  * void lcd_hw_wake();
  *
- * void lcd_bl_on();
- * void lcd_bl_off();
- *
- * void lcd_hw_set_backlight(uint8_t val);
- *
- *
  */
 
 
@@ -89,12 +82,20 @@ void lcd_Init_Seq_9488_a();
 
 void lcd_Init_Seq_9481();
 
+void set_9488_gamma(uint8_t val);
+
 #define LCD_TYPE_9481 1
 #define LCD_TYPE_9488 2
 
 uint8_t LCD_type;
 uint8_t LCD_delay;
 uint8_t LCD_gamma_mode;
+uint8_t LCD_invert;
+
+void lcd_set_params(uint8_t gamma_mode, uint8_t invert) {
+  LCD_gamma_mode = gamma_mode;
+  LCD_invert = invert;
+}
 
 uint8_t lcd_hw_init() {
   lcd_GPIO_Init();
@@ -187,110 +188,6 @@ void lcd_hw_wake() {
   lcd_Delay(20);
 }
 
-void lcd_bl_on() {
-  GPIO_InitTypeDef GPIO_InitStructure;
-  HAL_GPIO_DeInit(LCD_BL_PORT, LCD_BL_PIN);
-  GPIO_InitStructure.Pin       = LCD_BL_PIN;
-  GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Speed     = GPIO_SPEED_HIGH;
-  GPIO_InitStructure.Pull      = GPIO_PULLUP;
-  GPIO_InitStructure.Alternate = LCD_BL_ALT;
-  HAL_GPIO_Init(LCD_BL_PORT, &GPIO_InitStructure);
-}
-
-void lcd_bl_off() {
-  GPIO_InitTypeDef GPIO_InitStructure;
-  //svp_set_backlight(0); // just why?
-  HAL_TIM_PWM_Stop(&blTimer, LCD_BL_CHANNEL);
-
-  HAL_GPIO_DeInit(LCD_BL_PORT, LCD_BL_PIN);
-  GPIO_InitStructure.Pin   = LCD_BL_PIN;
-  GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-  GPIO_InitStructure.Pull  = GPIO_PULLUP;
-  HAL_GPIO_Init(LCD_BL_PORT, &GPIO_InitStructure);
-
-  HAL_GPIO_WritePin(LCD_BL_PORT, LCD_BL_PIN, 0);
-}
-
-void lcd_hw_set_backlight(uint8_t val) {
-  setBacklight(blTimer, LCD_BL_CHANNEL, val);
-}
-
-void backlight_timer_init() {
-  LCD_TIM_CLK_ENABLE;
-  lcd_bl_on();
-  TIM_OC_InitTypeDef sConfigOC;
-
-  blTimer.Instance         = LCD_BL_TIMER;
-  blTimer.Channel          = HAL_TIM_ACTIVE_CHANNEL_2;
-  blTimer.Init.Prescaler   = SystemCoreClock / 200000;
-  blTimer.Init.CounterMode = TIM_COUNTERMODE_UP;
-  blTimer.Init.Period      = 256;
-  blTimer.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
-  blTimer.Init.RepetitionCounter = 0;
-
-  if(HAL_TIM_PWM_Init(&blTimer) != HAL_OK) {
-    printf("HAL: TIM2 init error!\n");
-  }
-  /*
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
-
-  if(HAL_TIMEx_MasterConfigSynchronization(&blTimer, &sMasterConfig) != HAL_OK) {
-    printf("HAL: TIM2 init error (2)!\n");
-  }
-  */
-
-  sConfigOC.OCMode       = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse        = 128;
-  sConfigOC.OCPolarity   = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCNPolarity  = TIM_OCNPOLARITY_HIGH;
-  sConfigOC.OCFastMode   = TIM_OCFAST_DISABLE;
-  sConfigOC.OCIdleState  = TIM_OCIDLESTATE_RESET;
-  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-
-  if(HAL_TIM_PWM_ConfigChannel(&blTimer, &sConfigOC, LCD_BL_CHANNEL) != HAL_OK) {
-    printf("HAL: TIM2 init error (3)!\n");
-  }
-
-  if(HAL_TIM_PWM_Start(&blTimer, LCD_BL_CHANNEL) != HAL_OK) {
-    printf("HAL: TIM2 init error!(4)\n");
-  }
-}
-
-void lcd_bl_timer_OC_update() {
-  HAL_TIM_PWM_Stop(&blTimer, LCD_BL_CHANNEL);
-  HAL_TIM_PWM_DeInit(&blTimer);
-  // stop generation of pwm
-  blTimer.Init.Prescaler = SystemCoreClock / 200000;
-  if (HAL_TIM_PWM_Init(&blTimer)!= HAL_OK) {
-    printf("HAL: TIM2 setPWM error (0)!\n");
-  }
-  if (HAL_TIM_PWM_Start(&blTimer, LCD_BL_CHANNEL)!= HAL_OK) {
-    printf("HAL: TIM2 setPWM error (2)!\n");
-  }
-}
-
-static void setBacklight(TIM_HandleTypeDef timer, uint32_t channel, uint16_t pulse) {
-  TIM_OC_InitTypeDef sConfigOC;
-
-  sConfigOC.OCMode       = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse        = pulse;
-  sConfigOC.OCPolarity   = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCNPolarity  = TIM_OCNPOLARITY_LOW;
-  sConfigOC.OCFastMode   = TIM_OCFAST_DISABLE;
-  sConfigOC.OCIdleState  = TIM_OCIDLESTATE_RESET;
-  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-
-  if (HAL_TIM_PWM_ConfigChannel(&timer, &sConfigOC, channel) != HAL_OK) {
-    printf("HAL: TIM2 setPWM error (1)!\n");
-  }
-
-  if (HAL_TIM_PWM_Start(&timer, channel) != HAL_OK) {
-    printf("HAL: TIM2 setPWM error (2)!\n");
-  }
-}
 
 inline void lcd_Delay(__IO uint32_t nCount) {
   nCount *= 3;
@@ -323,60 +220,185 @@ void lcd_Init_Seq_9488_a() {
 
   lcd_Delay(50);
   // The send data D function stands for a bit of delay, LCD likes it better upon init
-  lcd_send_cmd_d(0xF1); //exit sleep
+  lcd_send_cmd_d(0xF1);  //exit sleep
 
-  lcd_send_cmd_d(0x3A); // interface pixel format
-  lcd_send_data(0x55); // 16 bit pixel
+  lcd_send_cmd_d(0x3A);  // interface pixel format
+  lcd_send_data(0x55);   // 16 bit pixel
 
-  lcd_send_cmd_d(0xC2); // Power Control 3
-  lcd_send_data(0x22);
+  //lcd_send_cmd_d(0XC0);   //Power Control 1
+  //lcd_send_data(0x1F);    //Verg1out 17
+  //lcd_send_data(0x01);    //Vreg2out 15
 
-  // positive gamma
-  lcd_send_cmd_d(0xE0);
-    // defaut conf
-    lcd_send_data(0x00);
-    lcd_send_data(0x07);
-    lcd_send_data(0x0C);
-    lcd_send_data(0x05);
-    lcd_send_data(0x13);
-    lcd_send_data(0x09);
-    lcd_send_data(0x36);
-    lcd_send_data(0xAA);
-    lcd_send_data(0x46);
-    lcd_send_data(0x09);
-    lcd_send_data(0x10);
-    lcd_send_data(0x0D);
-    lcd_send_data(0x1A);
-    lcd_send_data(0x1E);
-    lcd_send_data(0x0F);
+  //lcd_send_cmd_d(0xC1);   //Power Control 2
+  //lcd_send_data(0x44);    //VGH,VGL //41 og
 
-  lcd_send_cmd_d(0xE1);
-    lcd_send_data(0x00);
-    lcd_send_data(0x20);
-    lcd_send_data(0x23);
-    lcd_send_data(0x04);
-    lcd_send_data(0x10);
-    lcd_send_data(0x06);
-    lcd_send_data(0x37);
-    lcd_send_data(0x56);
-    lcd_send_data(0x49);
-    lcd_send_data(0x04);
-    lcd_send_data(0x0C);
-    lcd_send_data(0x0A);
-    lcd_send_data(0x33);
-    lcd_send_data(0x37);
-    lcd_send_data(0x0F);
+  //lcd_send_cmd_d(0xC2);  // Power Control 3 (for normal mode)
+  //lcd_send_data(0x22);   // og 33h
 
-  lcd_send_cmd_d(0x36);
+  //lcd_send_cmd_d(0xC5);   //Power Control 3
+  //lcd_send_data(0x00);
+  //lcd_send_data(0x12);    //Vcom
+  //lcd_send_data(0x80);
+
+
+  set_9488_gamma(LCD_gamma_mode);
+
+  lcd_send_cmd_d(0x36);  // set address mode
     lcd_send_data(0x48);
 
-  lcd_send_cmd_d(0x11); // sleep out
+  lcd_send_cmd_d(0x11);  // sleep out
   lcd_Delay(150);
 
-  lcd_send_cmd_d(0x21); // enter_invert_mode
+  if(LCD_invert) {
+    lcd_send_cmd_d(0x21); // enter_invert_mode
+  }
 
-  lcd_send_cmd_d(0x29); // display on
+  lcd_send_cmd_d(0x29);   // display on
   lcd_Delay(150);
+}
+
+void set_9488_gamma(uint8_t val) {
+  printf("setting gamma: %u\n", val);
+  if(val == 0) {
+    lcd_send_cmd_d(0xE0);
+      lcd_send_data(0x00);
+      lcd_send_data(0x07);
+      lcd_send_data(0x0C);
+      lcd_send_data(0x05);
+      lcd_send_data(0x13);
+      lcd_send_data(0x09);
+      lcd_send_data(0x36);
+      lcd_send_data(0xAA);
+      lcd_send_data(0x46);
+      lcd_send_data(0x09);
+      lcd_send_data(0x10);
+      lcd_send_data(0x0D);
+      lcd_send_data(0x1A);
+      lcd_send_data(0x1E);
+      lcd_send_data(0x0F);
+
+    lcd_send_cmd_d(0xE1);
+      lcd_send_data(0x00);
+      lcd_send_data(0x20);
+      lcd_send_data(0x23);
+      lcd_send_data(0x04);
+      lcd_send_data(0x10);
+      lcd_send_data(0x06);
+      lcd_send_data(0x37);
+      lcd_send_data(0x56);
+      lcd_send_data(0x49);
+      lcd_send_data(0x04);
+      lcd_send_data(0x0C);
+      lcd_send_data(0x0A);
+      lcd_send_data(0x33);
+      lcd_send_data(0x37);
+      lcd_send_data(0x0F);
+  } else if(val == 1) {
+    lcd_send_cmd_d(0xE0);
+      lcd_send_data(0x00);
+      lcd_send_data(0x07);
+      lcd_send_data(0x0f);
+      lcd_send_data(0x0D);
+      lcd_send_data(0x1B);
+      lcd_send_data(0x0A);
+      lcd_send_data(0x3c);
+      lcd_send_data(0x78);
+      lcd_send_data(0x4A);
+      lcd_send_data(0x07);
+      lcd_send_data(0x0E);
+      lcd_send_data(0x09);
+      lcd_send_data(0x1B);
+      lcd_send_data(0x1e);
+      lcd_send_data(0x0f);
+
+    lcd_send_cmd_d(0xE1);
+      lcd_send_data(0x00);
+      lcd_send_data(0x22);
+      lcd_send_data(0x24);
+      lcd_send_data(0x06);
+      lcd_send_data(0x12);
+      lcd_send_data(0x07);
+      lcd_send_data(0x36);
+      lcd_send_data(0x47);
+      lcd_send_data(0x47);
+      lcd_send_data(0x06);
+      lcd_send_data(0x0a);
+      lcd_send_data(0x07);
+      lcd_send_data(0x30);
+      lcd_send_data(0x37);
+      lcd_send_data(0x0f);
+  } else if(val == 2) {
+    lcd_send_cmd_d(0xE0); // gamma settings too dark, use those from 9486
+      lcd_send_data_d(0x00);
+      lcd_send_data_d(0x03);
+      lcd_send_data_d(0x09);
+      lcd_send_data_d(0x08);
+      lcd_send_data_d(0x16);
+      lcd_send_data_d(0x0A);
+      lcd_send_data_d(0x3F);
+      lcd_send_data_d(0x78);
+      lcd_send_data_d(0x4C);
+      lcd_send_data_d(0x09);
+      lcd_send_data_d(0x0A);
+      lcd_send_data_d(0x08);
+      lcd_send_data_d(0x16);
+      lcd_send_data_d(0x1A);
+      lcd_send_data_d(0x0F);
+
+    lcd_send_cmd_d(0XE1);
+      lcd_send_data_d(0x00);
+      lcd_send_data_d(0x16);
+      lcd_send_data_d(0x19);
+      lcd_send_data_d(0x03);
+      lcd_send_data_d(0x0F);
+      lcd_send_data_d(0x05);
+      lcd_send_data_d(0x32);
+      lcd_send_data_d(0x45);
+      lcd_send_data_d(0x46);
+      lcd_send_data_d(0x04);
+      lcd_send_data_d(0x0E);
+      lcd_send_data_d(0x0D);
+      lcd_send_data_d(0x35);
+      lcd_send_data_d(0x37);
+      lcd_send_data_d(0x0F);
+  } else if(val == 3) {
+    // same as 0, just inverted
+    lcd_send_cmd_d(0xE0);
+      lcd_send_data(0x00);
+      lcd_send_data(0x20);
+      lcd_send_data(0x23);
+      lcd_send_data(0x04);
+      lcd_send_data(0x10);
+      lcd_send_data(0x06);
+      lcd_send_data(0x37);
+      lcd_send_data(0x56);
+      lcd_send_data(0x49);
+      lcd_send_data(0x04);
+      lcd_send_data(0x0C);
+      lcd_send_data(0x0A);
+      lcd_send_data(0x33);
+      lcd_send_data(0x37);
+      lcd_send_data(0x0F);
+
+    lcd_send_cmd_d(0xE1);
+      lcd_send_data(0x00);
+      lcd_send_data(0x07);
+      lcd_send_data(0x0C);
+      lcd_send_data(0x05);
+      lcd_send_data(0x13);
+      lcd_send_data(0x09);
+      lcd_send_data(0x36);
+      lcd_send_data(0xAA);
+      lcd_send_data(0x46);
+      lcd_send_data(0x09);
+      lcd_send_data(0x10);
+      lcd_send_data(0x0D);
+      lcd_send_data(0x1A);
+      lcd_send_data(0x1E);
+      lcd_send_data(0x0F);
+  }
+
+  // else: set nothing
 }
 
 void lcd_Init_Seq_9481_b() {
@@ -401,7 +423,7 @@ void lcd_Init_Seq_9481_b() {
     //lcd_send_data_d(0x42);
     //lcd_send_data_d(0x18);
 
-  lcd_send_cmd_d(0xD1); // vcom
+  //lcd_send_cmd_d(0xD1); // vcom
   //lcd_send_data_d(0x00);
   //lcd_send_data_d(0x07);
   //lcd_send_data_d(0x10);
@@ -428,18 +450,18 @@ void lcd_Init_Seq_9481_b() {
 
 
   lcd_send_cmd_d(0xC8); // gamma
-  lcd_send_data_d(0x00);
-  lcd_send_data_d(0x32);
-  lcd_send_data_d(0x36);
-  lcd_send_data_d(0x45);
-  lcd_send_data_d(0x06);
-  lcd_send_data_d(0x16);
-  lcd_send_data_d(0x37);
-  lcd_send_data_d(0x75);
-  lcd_send_data_d(0x77);
-  lcd_send_data_d(0x54);
-  lcd_send_data_d(0x0C);
-  lcd_send_data_d(0x00);
+    lcd_send_data_d(0x00);
+    lcd_send_data_d(0x32);
+    lcd_send_data_d(0x36);
+    lcd_send_data_d(0x45);
+    lcd_send_data_d(0x06);
+    lcd_send_data_d(0x16);
+    lcd_send_data_d(0x37);
+    lcd_send_data_d(0x75);
+    lcd_send_data_d(0x77);
+    lcd_send_data_d(0x54);
+    lcd_send_data_d(0x0C);
+    lcd_send_data_d(0x00);
 /*
   lcd_send_data_d(0x00);
   lcd_send_data_d(0x14);
@@ -472,7 +494,9 @@ void lcd_Init_Seq_9481_b() {
   lcd_send_data_d(0x01);
   lcd_send_data_d(0xE0);
 
-  lcd_send_cmd_d(0x21); // enter_invert_mode
+  if(LCD_invert) {
+    lcd_send_cmd_d(0x21); // enter_invert_mode
+  }
 
   lcd_Delay(120);
   lcd_send_cmd_d(0x29); // display on
@@ -486,45 +510,6 @@ void lcd_Init_Seq_9488(){
   lcd_Delay(300);
   lcd_set_RD_high();
   lcd_set_CS_low();
-
-  /* one more gamma curve from the internetz
-   //POSITIVE GAMMA CORRECTION
-  ILI9488_Write_Command(0xE0);
-  ILI9488_Write_Data(0x00);
-  ILI9488_Write_Data(0x07);
-  ILI9488_Write_Data(0x0f);
-  ILI9488_Write_Data(0x0D);
-  ILI9488_Write_Data(0x1B);
-  ILI9488_Write_Data(0x0A);
-  ILI9488_Write_Data(0x3c);
-  ILI9488_Write_Data(0x78);
-  ILI9488_Write_Data(0x4A);
-  ILI9488_Write_Data(0x07);
-  ILI9488_Write_Data(0x0E);
-  ILI9488_Write_Data(0x09);
-  ILI9488_Write_Data(0x1B);
-  ILI9488_Write_Data(0x1e);
-  ILI9488_Write_Data(0x0f);
-
-  //NEGATIVE GAMMA CORRECTION
-  ILI9488_Write_Command(0xE1);
-  ILI9488_Write_Data(0x00);
-  ILI9488_Write_Data(0x22);
-  ILI9488_Write_Data(0x24);
-  ILI9488_Write_Data(0x06);
-  ILI9488_Write_Data(0x12);
-  ILI9488_Write_Data(0x07);
-  ILI9488_Write_Data(0x36);
-  ILI9488_Write_Data(0x47);
-  ILI9488_Write_Data(0x47);
-  ILI9488_Write_Data(0x06);
-  ILI9488_Write_Data(0x0a);
-  ILI9488_Write_Data(0x07);
-  ILI9488_Write_Data(0x30);
-  ILI9488_Write_Data(0x37);
-  ILI9488_Write_Data(0x0f);
-  */
-
 
   lcd_Delay(50);
   lcd_send_cmd_d(0xE0); // gamma settings too dark, use those from 9486
@@ -562,28 +547,28 @@ void lcd_Init_Seq_9488(){
   lcd_send_data(0x37);
   lcd_send_data(0x0F);
 
-  lcd_send_cmd_d(0XC0);      //Power Control 1
+  lcd_send_cmd_d(0XC0);   //Power Control 1
   lcd_send_data(0x17);    //Vreg1out
   lcd_send_data(0x15);    //Verg2out
 
-  lcd_send_cmd_d(0xC1);      //Power Control 2
+  lcd_send_cmd_d(0xC1);   //Power Control 2
   lcd_send_data(0x41);    //VGH,VGL
 
-  lcd_send_cmd_d(0xC5);      //Power Control 3
+  lcd_send_cmd_d(0xC5);   //Power Control 3
   lcd_send_data(0x00);
   lcd_send_data(0x12);    //Vcom
   lcd_send_data(0x80);
 
-  lcd_send_cmd_d(0x36);      //Memory Access
+  lcd_send_cmd_d(0x36);   //Memory Access
   lcd_send_data(0x48);
 
-  lcd_send_cmd_d(0x3A);      // Interface Pixel Format
+  lcd_send_cmd_d(0x3A);   // Interface Pixel Format
   lcd_send_data(0x55);
 
-  lcd_send_cmd_d(0x11);                     // sleep out
+  lcd_send_cmd_d(0x11);   // sleep out
   lcd_Delay(150);
 
-  lcd_send_cmd_d(0x29);                     // display on
+  lcd_send_cmd_d(0x29);   // display on
   lcd_Delay(150);
 }
 
