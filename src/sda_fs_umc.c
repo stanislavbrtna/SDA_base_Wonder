@@ -251,6 +251,52 @@ uint16_t svp_strlen(uint8_t *str) {
   return x + 1; //vrátí len i s terminátorem
 }
 
+#ifdef FF_FS_EXFAT
+// custom CWD setup
+
+uint8_t currentDir[1024];
+
+uint8_t svp_chdir(uint8_t* path) {
+  // remove slash on the end of path
+  if (path[svp_strlen(path - 1)] == '/' && svp_strlen(path - 1) != 0) {
+    path[svp_strlen(path - 1)] = 0;
+  }
+
+  // root check
+  if (path[0] == '/') {
+    // fill
+    sda_strcp(path, currentDir, sizeof(currentDir));
+  } else {
+    if(svp_strcmp(path, "..")) {
+      // find last slash
+      for(uint32_t i = sda_strlen(currentDir); i > 1; i--) {
+        if(currentDir[i] == '/') {
+          currentDir[i] = 0;
+          break;
+        }
+      }
+    } if(svp_strcmp(path, ".")) {
+      // Do nothing
+    } else {
+      if(currentDir[sda_strlen(currentDir) - 1] != '/' && sda_strlen(currentDir) != 2) {
+        sda_str_add(currentDir, "/");
+      }
+      sda_str_add(currentDir, path);
+    }
+  }
+  //printf("chdir: %s, newCWD: %s\n", path, currentDir);
+
+  f_chdir((char *)path);
+  return 0;
+}
+
+uint8_t svp_getcwd(uint8_t* buf, uint16_t len) {
+  sda_strcp(currentDir, buf, len);
+  return 0;
+}
+
+#else
+
 uint8_t svp_chdir(uint8_t* path) {
   // remove slash on the end of path
   if (path[svp_strlen(path - 1)] == '/' && svp_strlen(path - 1) != 0) {
@@ -265,6 +311,8 @@ uint8_t svp_getcwd(uint8_t* buf, uint16_t len) {
   f_getcwd((char *)buf, len);
   return 0;
 }
+
+#endif
 
 uint8_t svp_unlink(uint8_t* path) {
   f_unlink ((char *)path);
@@ -322,6 +370,7 @@ uint8_t svp_mount() {
     return 1; // mount error
   }else{
   	sd_mounted = 1;
+    svp_chdir("/"); // reset the custom cwd field
     return 0; // mount ok
   }
 }
