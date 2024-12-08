@@ -411,33 +411,29 @@ void lcd_Init_Seq_9481_b() {
   lcd_set_RD_high();
   lcd_set_CS_low();
 
-  lcd_send_cmd_d(0x11);
+  lcd_send_cmd_d(0x11); // sleep out
   lcd_Delay(80);
+
+  //TODO: Tweak power settings fot this screen type
 
   lcd_send_cmd_d(0xD0); // power settings
   lcd_send_data_d(0x07);
   lcd_send_data_d(0x41);
   lcd_send_data_d(0x1D);
 
-  //lcd_send_data_d(0x07); // too dark
-    //lcd_send_data_d(0x42);
-    //lcd_send_data_d(0x18);
-
-  //lcd_send_cmd_d(0xD1); // vcom
-  //lcd_send_data_d(0x00);
-  //lcd_send_data_d(0x07);
-  //lcd_send_data_d(0x10);
-
+  lcd_send_cmd_d(0xD1); // vcom
   lcd_send_data_d(0x00);
-  lcd_send_data_d(0x14); // 2b 1f, 18 13 předtím, prožkuje
+  lcd_send_data_d(0x14);
   lcd_send_data_d(0x1b);
 
-  lcd_send_cmd_d(0xD2); // power setting normal mode
-  lcd_send_data_d(0x01);
-  //lcd_send_data_d(0x02);
-  lcd_send_data_d(0x12); //11
 
-  lcd_send_cmd_d(0xC0); // panel driving settings
+  lcd_send_cmd_d(0xD2);  // power setting normal mode
+  lcd_send_data_d(0x01); // AP0 0 - off 1 - max ... 7 50%
+  lcd_send_data_d(0x00); // 11 12
+
+/* Default settings, no need to set them up.
+
+  lcd_send_cmd_d(0xC0);  // panel driving settings
   lcd_send_data_d(0x10);
   lcd_send_data_d(0x3B);
   lcd_send_data_d(0x00);
@@ -445,11 +441,13 @@ void lcd_Init_Seq_9481_b() {
   lcd_send_data_d(0x11);
   lcd_send_data_d(0x00);
 
-  lcd_send_cmd_d(0xC5); // frame rate
-  lcd_send_data_d(0x03); //42hz
+  lcd_send_cmd_d(0xC5);  // frame rate
+  lcd_send_data_d(0x03); //72hz
+*/
 
-
-  lcd_send_cmd_d(0xC8); // gamma
+  // Gamma
+  if(LCD_gamma_mode == 0) {
+    lcd_send_cmd_d(0xC8); 
     lcd_send_data_d(0x00);
     lcd_send_data_d(0x32);
     lcd_send_data_d(0x36);
@@ -462,20 +460,37 @@ void lcd_Init_Seq_9481_b() {
     lcd_send_data_d(0x54);
     lcd_send_data_d(0x0C);
     lcd_send_data_d(0x00);
-/*
-  lcd_send_data_d(0x00);
-  lcd_send_data_d(0x14);
-  lcd_send_data_d(0x33);
-  lcd_send_data_d(0x10);
-  lcd_send_data_d(0x00);
-  lcd_send_data_d(0x16);
-  lcd_send_data_d(0x44);
-  lcd_send_data_d(0x36);
-  lcd_send_data_d(0x77);
-  lcd_send_data_d(0x00);
-  lcd_send_data_d(0x0F);
-  lcd_send_data_d(0x00);
-*/
+  } else if (LCD_gamma_mode == 1) {
+    lcd_send_cmd_d(0xC8);
+    lcd_send_data_d(0x00);
+    lcd_send_data_d(0x14);
+    lcd_send_data_d(0x33);
+    lcd_send_data_d(0x10);
+    lcd_send_data_d(0x00);
+    lcd_send_data_d(0x16);
+    lcd_send_data_d(0x44);
+    lcd_send_data_d(0x36);
+    lcd_send_data_d(0x77);
+    lcd_send_data_d(0x00);
+    lcd_send_data_d(0x0F);
+    lcd_send_data_d(0x00);
+  } else {
+    lcd_send_cmd_d(0xC8);
+    lcd_send_data_d(0x37);
+    lcd_send_data_d(0x75);
+    lcd_send_data_d(0x77);
+    lcd_send_data_d(0x54);
+    lcd_send_data_d(0x0C);
+    lcd_send_data_d(0x00);
+
+    lcd_send_data_d(0x00);
+    lcd_send_data_d(0x32);
+    lcd_send_data_d(0x36);
+    lcd_send_data_d(0x45);
+    lcd_send_data_d(0x06);
+    lcd_send_data_d(0x16);
+  }
+
   lcd_send_cmd_d(0x36); // set address mode
   lcd_send_data_d(0x0A);
 
@@ -502,146 +517,6 @@ void lcd_Init_Seq_9481_b() {
   lcd_send_cmd_d(0x29); // display on
 }
 
-void lcd_Init_Seq_9488(){
-
-  lcd_set_RST_low();
-  lcd_Delay(300);
-  lcd_set_RST_high();
-  lcd_Delay(300);
-  lcd_set_RD_high();
-  lcd_set_CS_low();
-
-  lcd_Delay(50);
-  lcd_send_cmd_d(0xE0); // gamma settings too dark, use those from 9486
-  lcd_send_data(0x00);
-  lcd_send_data(0x03);
-  lcd_send_data(0x09);
-  lcd_send_data(0x08);
-  lcd_send_data(0x16);
-  lcd_send_data(0x0A);
-  lcd_send_data(0x3F);
-  lcd_send_data(0x78);
-  lcd_send_data(0x4C);
-  lcd_send_data(0x09);
-  lcd_send_data(0x0A);
-  lcd_send_data(0x08);
-  lcd_send_data(0x16);
-  lcd_send_data(0x1A);
-  lcd_send_data(0x0F);
-
-
-  lcd_send_cmd_d(0XE1);
-  lcd_send_data(0x00);
-  lcd_send_data(0x16);
-  lcd_send_data(0x19);
-  lcd_send_data(0x03);
-  lcd_send_data(0x0F);
-  lcd_send_data(0x05);
-  lcd_send_data(0x32);
-  lcd_send_data(0x45);
-  lcd_send_data(0x46);
-  lcd_send_data(0x04);
-  lcd_send_data(0x0E);
-  lcd_send_data(0x0D);
-  lcd_send_data(0x35);
-  lcd_send_data(0x37);
-  lcd_send_data(0x0F);
-
-  lcd_send_cmd_d(0XC0);   //Power Control 1
-  lcd_send_data(0x17);    //Vreg1out
-  lcd_send_data(0x15);    //Verg2out
-
-  lcd_send_cmd_d(0xC1);   //Power Control 2
-  lcd_send_data(0x41);    //VGH,VGL
-
-  lcd_send_cmd_d(0xC5);   //Power Control 3
-  lcd_send_data(0x00);
-  lcd_send_data(0x12);    //Vcom
-  lcd_send_data(0x80);
-
-  lcd_send_cmd_d(0x36);   //Memory Access
-  lcd_send_data(0x48);
-
-  lcd_send_cmd_d(0x3A);   // Interface Pixel Format
-  lcd_send_data(0x55);
-
-  lcd_send_cmd_d(0x11);   // sleep out
-  lcd_Delay(150);
-
-  lcd_send_cmd_d(0x29);   // display on
-  lcd_Delay(150);
-}
-
-// ILI9481
-void lcd_Init_Seq_9481(){
-  //reset
-  lcd_set_RST_low();
-  lcd_Delay(300);
-  lcd_set_RST_high();
-  lcd_Delay(300);
-
-  LCD_Write_COM(0x11);
-  lcd_Delay(20);
-  LCD_Write_COM(0xD0);
-  LCD_Write_DATA(0x07);
-  LCD_Write_DATA(0x42);
-  LCD_Write_DATA(0x18);
-
-  LCD_Write_COM(0xD1);
-  LCD_Write_DATA(0x00);
-  LCD_Write_DATA(0x07);
-  LCD_Write_DATA(0x10);
-
-  LCD_Write_COM(0xD2);
-  LCD_Write_DATA(0x01);
-  LCD_Write_DATA(0x02);
-
-  LCD_Write_COM(0xC0);
-  LCD_Write_DATA(0x10);
-  LCD_Write_DATA(0x3B);
-  LCD_Write_DATA(0x00);
-  LCD_Write_DATA(0x02);
-  LCD_Write_DATA(0x11);
-
-  LCD_Write_COM(0xC5);
-  LCD_Write_DATA(0x03);
-
-  LCD_Write_COM(0xC8);
-  LCD_Write_DATA(0x00);
-  LCD_Write_DATA(0x32);
-  LCD_Write_DATA(0x36);
-  LCD_Write_DATA(0x45);
-  LCD_Write_DATA(0x06);
-  LCD_Write_DATA(0x16);
-  LCD_Write_DATA(0x37);
-  LCD_Write_DATA(0x75);
-  LCD_Write_DATA(0x77);
-  LCD_Write_DATA(0x54);
-  LCD_Write_DATA(0x0C);
-  LCD_Write_DATA(0x00);
-
-  LCD_Write_COM(0x36);
-  LCD_Write_DATA(0x0A);
-
-  LCD_Write_COM(0x3A);
-  LCD_Write_DATA(0x55);
-
-  LCD_Write_COM(0x2A);
-  LCD_Write_DATA(0x00);
-  LCD_Write_DATA(0x00);
-  LCD_Write_DATA(0x01);
-  LCD_Write_DATA(0x3F);
-
-  LCD_Write_COM(0x2B);
-  LCD_Write_DATA(0x00);
-  LCD_Write_DATA(0x00);
-  LCD_Write_DATA(0x01);
-  LCD_Write_DATA(0xE0);
-  lcd_Delay(120);
-  LCD_Write_COM(0x29);
-  LCD_Write_COM(0x2C);
-  //lcd_set_RD(0);
-}
 
 inline void lcd_send_data(uint8_t data) {
 
