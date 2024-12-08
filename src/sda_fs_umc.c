@@ -262,6 +262,13 @@ uint8_t svp_chdir(uint8_t* path) {
     path[svp_strlen(path - 1)] = 0;
   }
 
+  FRESULT f = f_chdir((char *)path);
+
+  if (f != FR_OK) {
+    printf("%s: chDir Failed!\n", __FUNCTION__);
+    return 0;
+  }
+
   // root check
   if (path[0] == '/') {
     // fill
@@ -286,8 +293,7 @@ uint8_t svp_chdir(uint8_t* path) {
   }
   //printf("chdir: %s, newCWD: %s\n", path, currentDir);
 
-  f_chdir((char *)path);
-  return 0;
+  return 1;
 }
 
 uint8_t svp_getcwd(uint8_t* buf, uint16_t len) {
