@@ -282,7 +282,7 @@ uint8_t svp_chdir(uint8_t* path) {
           break;
         }
       }
-    } if(svp_strcmp(path, ".")) {
+    } else if(svp_strcmp(path, ".")) {
       // Do nothing
     } else {
       if(currentDir[sda_strlen(currentDir) - 1] != '/' && sda_strlen(currentDir) != 2) {
