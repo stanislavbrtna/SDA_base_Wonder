@@ -225,7 +225,6 @@ uint32_t svp_random() {
 
 void svp_set_lcd_state(lcdStateType state) {
 	if(state == LCD_ON) {
-		system_clock_set_normal();
 		lcd_hw_wake();
 		Lcd_on_flag  = 200;
     Lcd_off_flag = 0;
@@ -324,6 +323,7 @@ void system_clock_set_normal(void) {
 	HAL_RCC_DeInit();
 	SystemClock_Config();
 	SystemCoreClockUpdate();
+  reload_clock_sensitive_stuff();
 
 	cpuClkLowFlag = 0;
 }

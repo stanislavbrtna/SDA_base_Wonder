@@ -109,9 +109,10 @@ void SysTick_Handler(void) {
 
 
 void power_button_handler() {
-  static uint8_t powerOnLck;
-  static uint8_t pwrBtnPrev;
+  static uint8_t  powerOnLck;
+  static uint8_t  pwrBtnPrev;
   static uint32_t pwrLongPressCnt;
+
    // Power on with just press
    if((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET) && (pwrBtnPrev == 0)) {
      if (svpSGlobal.lcdState == LCD_OFF) {
@@ -121,6 +122,7 @@ void power_button_handler() {
        pwrLongPressCnt = 0;
      }
    }
+
    // pwr long press detection
    if (HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET && svpSGlobal.lcdState == LCD_ON) {
      pwrLongPressCnt++;
@@ -144,6 +146,7 @@ void power_button_handler() {
        }
      }
    }
+
    sdaWakeupFlag = 0; // button was handled
    pwrBtnPrev = HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN);
 }

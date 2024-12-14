@@ -39,7 +39,6 @@ void sd_wait_for_ready();
 
 void wonder_enter_sleep() { // should be called when tick is locked
   touchSleep();
-  uart3_sleep();
   if(cpuClkLowFlag == 0) {
     system_clock_set_low();
   }
@@ -53,20 +52,24 @@ void wonder_enter_sleep() { // should be called when tick is locked
   }
 
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET);
+
   // enter sleep state
   HAL_SuspendTick();
-  // 3.7 mA PWR_LOWPOWERREGULATOR_ON 3.8 with main power, on main power it wakes up immediately
-  HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
-  //HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI); // orig 8.6 mA
+  
+  if(svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_LOW) {
+    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI); // orig 8.6 mA
+  } else {
+    uart3_sleep();
+    // 3.7 mA PWR_LOWPOWERREGULATOR_ON 3.8 with main power, on main power it wakes up immediately
+    HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI); // 3.7 mA
+  }
 
   // Wakeup
   system_clock_set_normal();
   HAL_ResumeTick();
-  reload_clock_sensitive_stuff();
   sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
   sd_wait_for_ready();
   touchWake();
-  uart3_wake_up();
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET);
   Delay(100000); // Wait for power to stabilize
 }
@@ -81,7 +84,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   (void) (GPIO_Pin);
   if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0) {
     sdaWakeupFlag = 1;
-    system_clock_set_normal();
   }
 }
 
