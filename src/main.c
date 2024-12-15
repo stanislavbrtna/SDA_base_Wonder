@@ -113,42 +113,51 @@ void power_button_handler() {
   static uint8_t  pwrBtnPrev;
   static uint32_t pwrLongPressCnt;
 
-   // Power on with just press
-   if((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET) && (pwrBtnPrev == 0)) {
-     if (svpSGlobal.lcdState == LCD_OFF) {
+  // Power on with just press
+  if(
+    (HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET)
+    && (pwrBtnPrev == 0)
+  ){
+    if (svpSGlobal.lcdState == LCD_OFF) {
        svp_set_lcd_state(LCD_ON);
        powerOnLck = 1;
        svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
        pwrLongPressCnt = 0;
-     }
-   }
+    }
+  }
 
    // pwr long press detection
-   if (HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET && svpSGlobal.lcdState == LCD_ON) {
-     pwrLongPressCnt++;
-   }
+  if(
+    HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET
+    && svpSGlobal.lcdState == LCD_ON
+  ){
+    pwrLongPressCnt++;
+  }
 
-   if (pwrLongPressCnt == 1500) {
-     svpSGlobal.systemPwrLongPress = 1;
-   }
+  if (pwrLongPressCnt == 1500) {
+    svpSGlobal.systemPwrLongPress = 1;
+  }
 
-   if((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_RESET) && (pwrBtnPrev == 1)) {
-     if (pwrLongPressCnt > 1500) {
-       pwrLongPressCnt = 0;
-     } else {
-       if (powerOnLck) {
-         powerOnLck = 0;
-       } else {
-         // power off with release
-         if (svpSGlobal.lcdState == LCD_ON) {
-           svp_set_lcd_state(LCD_OFF);
-         }
-       }
-     }
-   }
+  if(
+    (HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_RESET) 
+    && (pwrBtnPrev == 1)
+  ){
+    if (pwrLongPressCnt > 1500) {
+      pwrLongPressCnt = 0;
+    } else {
+      if (powerOnLck) {
+        powerOnLck = 0;
+      } else {
+        // power off with release
+        if (svpSGlobal.lcdState == LCD_ON) {
+          svp_set_lcd_state(LCD_OFF);
+        }
+      }
+    }
+  }
 
-   sdaWakeupFlag = 0; // button was handled
-   pwrBtnPrev = HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN);
+  sdaWakeupFlag = 0; // button was handled
+  pwrBtnPrev = HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN);
 }
 
 
