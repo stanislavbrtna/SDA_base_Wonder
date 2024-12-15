@@ -23,6 +23,8 @@ SOFTWARE.
 #include <string.h>
 #include "lcd.h"
 
+#define LCD_BL_PRESCALER 512
+
 TIM_HandleTypeDef blTimer;
 
 static void setBacklight(TIM_HandleTypeDef timer, uint32_t channel, uint16_t pulse);
@@ -62,48 +64,26 @@ void backlight_timer_init() {
   lcd_bl_on();
   TIM_OC_InitTypeDef sConfigOC;
 
-  blTimer.Instance         = LCD_BL_TIMER;
-  blTimer.Channel          = HAL_TIM_ACTIVE_CHANNEL_2;
-  blTimer.Init.Prescaler   = SystemCoreClock / 200000;
-  blTimer.Init.CounterMode = TIM_COUNTERMODE_UP;
-  blTimer.Init.Period      = 256;
+  blTimer.Instance               = LCD_BL_TIMER;
+  blTimer.Channel                = HAL_TIM_ACTIVE_CHANNEL_2;
+  blTimer.Init.Prescaler         = LCD_BL_PRESCALER;
+  blTimer.Init.CounterMode       = TIM_COUNTERMODE_UP;
+  blTimer.Init.Period            = 256;
   blTimer.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
   blTimer.Init.RepetitionCounter = 0;
 
   if(HAL_TIM_PWM_Init(&blTimer) != HAL_OK) {
     printf("HAL: TIM2 init error!\n");
   }
-  /*
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
-
-  if(HAL_TIMEx_MasterConfigSynchronization(&blTimer, &sMasterConfig) != HAL_OK) {
-    printf("HAL: TIM2 init error (2)!\n");
-  }
-  */
-
-  sConfigOC.OCMode       = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse        = 128;
-  sConfigOC.OCPolarity   = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCNPolarity  = TIM_OCNPOLARITY_HIGH;
-  sConfigOC.OCFastMode   = TIM_OCFAST_DISABLE;
-  sConfigOC.OCIdleState  = TIM_OCIDLESTATE_RESET;
-  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-
-  if(HAL_TIM_PWM_ConfigChannel(&blTimer, &sConfigOC, LCD_BL_CHANNEL) != HAL_OK) {
-    printf("HAL: TIM2 init error (3)!\n");
-  }
-
-  if(HAL_TIM_PWM_Start(&blTimer, LCD_BL_CHANNEL) != HAL_OK) {
-    printf("HAL: TIM2 init error!(4)\n");
-  }
+  
+  setBacklight(blTimer, LCD_BL_CHANNEL, 128);
 }
 
 void lcd_bl_timer_OC_update() {
   HAL_TIM_PWM_Stop(&blTimer, LCD_BL_CHANNEL);
   HAL_TIM_PWM_DeInit(&blTimer);
   // stop generation of pwm
-  blTimer.Init.Prescaler = SystemCoreClock / 200000;
+  blTimer.Init.Prescaler = LCD_BL_PRESCALER;
   if (HAL_TIM_PWM_Init(&blTimer)!= HAL_OK) {
     printf("HAL: TIM2 setPWM error (0)!\n");
   }
