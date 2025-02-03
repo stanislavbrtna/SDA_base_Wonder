@@ -23,7 +23,7 @@ SOFTWARE.
 #include <string.h>
 #include "lcd.h"
 
-#define LCD_BL_PRESCALER 512
+#define LCD_BL_PRESCALER (SystemCoreClock / 180000)
 
 TIM_HandleTypeDef blTimer;
 
