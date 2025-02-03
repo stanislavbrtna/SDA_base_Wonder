@@ -112,6 +112,35 @@ uint32_t svp_get_size(svp_file *fp) {
 
 }
 
+int32_t svp_get_mtime(uint8_t *fname) {
+  FRESULT fr;
+  FILINFO fno;
+  
+  if (f_stat(fname, &fno) != FR_OK) {
+    return 0;
+  }
+
+  return sdaTimeGetTimestamp(
+    (fno.fdate >> 9) + 1980,
+    fno.fdate >> 5 & 15,
+    fno.fdate & 31,
+    fno.ftime >> 11,
+    fno.ftime >> 5 & 63,
+    fno.ftime & 63
+  );
+}
+
+uint32_t svp_get_size_n(uint8_t *fname) {
+  FRESULT fr;
+  FILINFO fno;
+  
+  if (f_stat(fname, &fno) != FR_OK) {
+    return 0;
+  }
+
+  return fno.fsize;
+}
+
 uint32_t svp_ftell(svp_file *fp) {
   return f_tell (&(fp->fPointer));
 }
