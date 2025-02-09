@@ -23,18 +23,18 @@ SOFTWARE.
 #include "touch.h"
 
 #if LANG_VAL==0
-#define CALIB_TITLE (uint8_t *)"Test Kalibrace"
-#define CALIB_HINT  (uint8_t *)"(Použijte tlačítka k potvrzení)"
-#define CALIB_AGAIN (uint8_t *)"Rekalibrovat"
-#define CALIB_OK    (uint8_t *)"Ok"
+  #define CALIB_TITLE (uint8_t *)"Test Kalibrace"
+  #define CALIB_HINT  (uint8_t *)"(Použijte tlačítka k potvrzení)"
+  #define CALIB_AGAIN (uint8_t *)"Rekalibrovat"
+  #define CALIB_OK    (uint8_t *)"Ok"
 #endif
 
-
+	
 #if LANG_VAL==1
-#define CALIB_TITLE (uint8_t *)"Calibration test"
-#define CALIB_HINT  (uint8_t *)"(use buttons to select option)"
-#define CALIB_AGAIN (uint8_t *)"Calibrate again"
-#define CALIB_OK    (uint8_t *)"Ok"
+  #define CALIB_TITLE (uint8_t *)"Calibration test"
+  #define CALIB_HINT  (uint8_t *)"(use buttons to select option)"
+  #define CALIB_AGAIN (uint8_t *)"Calibrate again"
+  #define CALIB_OK    (uint8_t *)"Ok"
 #endif
 
 

@@ -28,41 +28,40 @@ uint8_t sd_mounted;
 
 uint8_t svp_fopen_read(svp_file *fp, uint8_t *fname) {
 
-	if (!sd_mounted) {
-		return 0;
-	}
+  if (!sd_mounted) {
+    return 0;
+  }
 
   fp->fPointerRes = f_open(&(fp->fPointer), (char*)fname, FA_READ);
-	if (fp->fPointerRes == FR_OK) {
-	  return 1;
-	} else {
-	  return 0;
-	}
+  if (fp->fPointerRes == FR_OK) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 uint8_t svp_fopen_rw(svp_file *fp, uint8_t *fname) {
 
-	if (!sd_mounted) {
-		return 0;
-	}
+  if (!sd_mounted) {
+    return 0;
+  }
   fp->fPointerRes = f_open(&(fp->fPointer), (char*)fname, FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
-	if (fp->fPointerRes == FR_OK) {
-	  return 1;
-	} else {
-	  return 0;
-	}
-
+  if (fp->fPointerRes == FR_OK) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 
 uint8_t svp_fexists(uint8_t *fname) {
   svp_file fp;
 
-	if (!sd_mounted) {
-		return 0;
-	}
+  if (!sd_mounted) {
+    return 0;
+  }
 
-	fp.fPointerRes = f_stat((char *)fname, 0);
+  fp.fPointerRes = f_stat((char *)fname, 0);
 
   if (fp.fPointerRes == FR_OK) {
     return 1;
@@ -76,13 +75,11 @@ uint8_t svp_fread_u8(svp_file *fp) {
 
   f_read(&(fp->fPointer), &x, sizeof(x), (UINT*)&(fp->fPointerRes));
   return x;
-
 }
 
 uint8_t svp_fread(svp_file *fp, void *target, uint32_t size) {
   f_read(&(fp->fPointer), target, size, (UINT*)&(fp->fPointerRes));
   return 0;
-
 }
 
 void svp_fwrite_u8(svp_file *fp, uint8_t val) {
@@ -107,9 +104,7 @@ uint8_t svp_fseek(svp_file *fp, uint32_t offset) {
 }
 
 uint32_t svp_get_size(svp_file *fp) {
-
   return f_size(&(fp->fPointer));
-
 }
 
 int32_t svp_get_mtime(uint8_t *fname) {
@@ -151,20 +146,20 @@ void svp_truncate(svp_file *fp) {
 }
 
 uint8_t svp_rename(uint8_t *source, uint8_t *dest) {
-	FRESULT res;
-	res = f_rename((char *)source,(char *) dest);
-	if (res) {
-		return 0;
-	} else {
-		return 1;
-	}
+  FRESULT res;
+  res = f_rename((char *)source,(char *) dest);
+  if (res) {
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
 
-  uint8_t exten[8];
-  static FRESULT res;
-  static DIR dir;
-  static uint8_t dir_openned;
+uint8_t exten[8];
+static FRESULT res;
+static DIR dir;
+static uint8_t dir_openned;
 
 uint8_t svp_strcmp_ext(uint8_t *s1, uint8_t *s_ext) {
   uint16_t x = 0;
@@ -172,10 +167,10 @@ uint8_t svp_strcmp_ext(uint8_t *s1, uint8_t *s_ext) {
   //printf("comparing: %s a %s : ", s1, s_ext);
   while(s1[x] != '.') {
     if (s1[x] == 0) {
-    	if (s_ext[0] == 0) {
-    		return 1; // if there is no extension, we list all the files
-    	} else {
-      	return 0;
+      if (s_ext[0] == 0) {
+        return 1; // if there is no extension, we list all the files
+      } else {
+        return 0;
       }
       //printf("fail! dot not found\n");
     }
@@ -201,7 +196,7 @@ uint8_t svp_extFindNext(uint8_t *outStr, uint16_t len) {
     return 0;
   }
   while (1) {
-	  res = f_readdir(&dir, &fno);
+    res = f_readdir(&dir, &fno);
       //printf("dir: %d\n", fno.fname);
       if((res==FR_OK)&&(fno.fname[0] != 0)) {
         if(svp_strcmp_ext((uint8_t *)fno.fname, exten)) {
@@ -211,11 +206,11 @@ uint8_t svp_extFindNext(uint8_t *outStr, uint16_t len) {
           continue;
         }
       } else {
-    	//printf("closing\n");
-    	f_closedir(&dir);
-    	dir_openned = 0;
-    	//printf("closed\n");
-    	return 0;
+      //printf("closing\n");
+      f_closedir(&dir);
+      dir_openned = 0;
+      //printf("closed\n");
+      return 0;
       }
     }
 }
@@ -230,7 +225,7 @@ uint8_t svp_extFind(uint8_t *outStr, uint16_t len, uint8_t *extension, uint8_t *
   res = f_opendir(&dir, (char *)directory);
   if (res == FR_OK) {
     dir_openned = 1;
-  	return svp_extFindNext(outStr, len);
+    return svp_extFindNext(outStr, len);
   }
   return 0;
 }
@@ -238,7 +233,7 @@ uint8_t svp_extFind(uint8_t *outStr, uint16_t len, uint8_t *extension, uint8_t *
 uint8_t svp_open_dir(svp_dir *dp, uint8_t *path) {
   dp->res = f_opendir(&(dp->dir), (char *)path);
   if (dp->res == FR_OK) {
-	  return 0;
+    return 0;
   } else {
     return 1;
   }
@@ -251,23 +246,23 @@ uint8_t svp_close_dir(svp_dir *dp) {
 }
 
 uint8_t svp_strcmp(uint8_t *a, uint8_t *b) {
-	uint16_t x = 0;
-	uint8_t retval = 1;
-	//printf("comp: %s a %s\n", a, b);
-	while (x < 100) {
-		if ((a[x] == 0) || (b[x] == 0)) {
-			if (a[x] != b[x]) {
-				retval = 0;
-			}
-			break;
-		} else {
-			if (a[x] != b[x]){
-				retval = 0;
-			}
-			x++;
-		}
-	}
-	return retval;
+  uint16_t x = 0;
+  uint8_t retval = 1;
+  //printf("comp: %s a %s\n", a, b);
+  while (x < 100) {
+    if ((a[x] == 0) || (b[x] == 0)) {
+      if (a[x] != b[x]) {
+        retval = 0;
+      }
+      break;
+    } else {
+      if (a[x] != b[x]){
+        retval = 0;
+      }
+      x++;
+    }
+  }
+  return retval;
 }
 
 uint16_t svp_strlen(uint8_t *str) {
@@ -283,7 +278,7 @@ uint16_t svp_strlen(uint8_t *str) {
 #ifdef FF_FS_EXFAT
 // custom CWD setup
 
-uint8_t currentDir[1024];
+uint8_t currentDir[512];
 
 uint8_t svp_chdir(uint8_t* path) {
   // remove slash on the end of path
@@ -366,27 +361,26 @@ uint8_t svp_is_dir(uint8_t* path) {
   fr = f_stat((char *)path, &fno);
 
   if (fr != FR_OK) {
-  	printf("Error: svp_is_dir: no such file?\n");
-  	return 0;
+    printf("Error: svp_is_dir: no such file?\n");
+    return 0;
   }
 
   if (fno.fattrib & AM_DIR) {
-  	return 1;
+    return 1;
   }
 
   return 0;
 }
 
 uint8_t svp_mkdir(uint8_t* path) {
-	FRESULT res;
-	res = f_mkdir((char *)path);
-	if (res) {
-		return 0;
-	} else {
-		return 1;
-	}
+  FRESULT res;
+  res = f_mkdir((char *)path);
+  if (res) {
+    return 0;
+  } else {
+    return 1;
+  }
 }
-
 
 void svp_fsync(svp_file *fp) {
   f_sync(&(fp->fPointer));
@@ -404,24 +398,24 @@ uint8_t svp_mount() {
   if(fr != FR_OK) {
     return 1; // mount error
   }else{
-  	sd_mounted = 1;
+    sd_mounted = 1;
     svp_chdir("/"); // reset the custom cwd field
     return 0; // mount ok
   }
 }
 
 void svp_umount() {
-	sd_mounted = 0;
+  sd_mounted = 0;
   f_mount(0, "", 0);
 }
 
 uint8_t svp_getMounted() {
-	return sd_mounted;
+  return sd_mounted;
 }
 
 // because it was mounted before the svp init
 void svp_setMounted(uint8_t val) {
-	sd_mounted = val;
+  sd_mounted = val;
 }
 
 /* File Find example:

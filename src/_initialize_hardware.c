@@ -67,20 +67,6 @@ __initialize_hardware(void)
   SystemCoreClockUpdate();
 }
 
-// Disable when using RTOSes, since they have their own handler.
-#if 0
-
-// This is a sample SysTick handler, use it if you need HAL timings.
-void __attribute__ ((section(".after_vectors")))
-SysTick_Handler(void)
-{
-#if defined(USE_HAL_DRIVER)
-	HAL_IncTick();
-#endif
-}
-
-#endif
-
 // ----------------------------------------------------------------------------
 
 /**

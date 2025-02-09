@@ -30,15 +30,15 @@ void MX_USART3_UART_Init(void) {
 void HAL_UART3_MspInit(UART_HandleTypeDef* uartHandle) {
   GPIO_InitTypeDef GPIO_InitStruct;
   (void) (uartHandle);
-	/* Peripheral clock enable */
-	__HAL_RCC_USART3_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+  /* Peripheral clock enable */
+  __HAL_RCC_USART3_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   // Pins are configured from the OS
 
-	HAL_NVIC_SetPriority(USART3_IRQn, 1, 1);
-	NVIC_ClearPendingIRQ(USART3_IRQn); // without this the thing borks...
-	HAL_NVIC_EnableIRQ(USART3_IRQn);
+  HAL_NVIC_SetPriority(USART3_IRQn, 1, 1);
+  NVIC_ClearPendingIRQ(USART3_IRQn); // without this the thing borks...
+  HAL_NVIC_EnableIRQ(USART3_IRQn);
 }
 
   
@@ -112,60 +112,59 @@ void uart3_set_speed(uint32_t bd) {
 }
 
 void uart3_transmit(uint8_t *str, uint32_t len) {
+  if (!sdaSerialEnabled) {
+    sda_serial_enable();
+  }
 
-	if (!sdaSerialEnabled) {
-		sda_serial_enable();
-	}
+  //while (HAL_UART_GetState(&huart3) != HAL_UART_STATE_READY && HAL_UART_GetState(&huart3) != HAL_UART_STATE_BUSY_RX);
 
-	//while (HAL_UART_GetState(&huart3) != HAL_UART_STATE_READY && HAL_UART_GetState(&huart3) != HAL_UART_STATE_BUSY_RX);
-
-	HAL_UART_Transmit(&huart3, str, len, 1000);
+  HAL_UART_Transmit(&huart3, str, len, 1000);
 }
 
 uint8_t uart3_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
-	static uint8_t buff[512];
-	uint32_t tickstart = 0U;
+  static uint8_t buff[512];
+  uint32_t tickstart = 0U;
 
-	if (!sdaSerialEnabled) {
-		sda_serial_enable();
-	}
+  if (!sdaSerialEnabled) {
+    sda_serial_enable();
+  }
 
-	HAL_UART_AbortReceive_IT(&huart3);
-	it_rcv_enabled = 0;
+  HAL_UART_AbortReceive_IT(&huart3);
+  it_rcv_enabled = 0;
 
-	for(uint32_t i = 0; i < sizeof(buff); i++) {
-		buff[i] = 0;
-	}
+  for(uint32_t i = 0; i < sizeof(buff); i++) {
+    buff[i] = 0;
+  }
 
-	tickstart = HAL_GetTick();
+  tickstart = HAL_GetTick();
 
-	uint32_t i = 0;
-	tick_lock = SDA_LOCK_LOCKED;
-	while (i < len) {
-	   uint8_t c;
-	   if (HAL_UART_Receive(&huart3, &c, sizeof(c), timeout / len) != HAL_OK) {
-	     if ( HAL_GetTick() > (tickstart + timeout + 100)) {
-	       if(i == 0){
-	         printf("uart3 recv error\n");
-	         tick_lock = SDA_LOCK_UNLOCKED; // enable tick again!
-	         return 0;
-	       }else{
-	         break;
-	       }
-	     }
-	   } else {
-	     buff[i] = c;
-	     i++;
-	   }
-	}
+  uint32_t i = 0;
+  tick_lock = SDA_LOCK_LOCKED;
+  while (i < len) {
+     uint8_t c;
+     if (HAL_UART_Receive(&huart3, &c, sizeof(c), timeout / len) != HAL_OK) {
+       if ( HAL_GetTick() > (tickstart + timeout + 100)) {
+         if(i == 0){
+           printf("uart3 recv error\n");
+           tick_lock = SDA_LOCK_UNLOCKED; // enable tick again!
+           return 0;
+         }else{
+           break;
+         }
+       }
+     } else {
+       buff[i] = c;
+       i++;
+     }
+  }
 
-	for(i = 0; i < len; i++) {
-		str[i] = buff[i];
-	}
+  for(i = 0; i < len; i++) {
+    str[i] = buff[i];
+  }
 
-	tick_lock = SDA_LOCK_UNLOCKED;
+  tick_lock = SDA_LOCK_UNLOCKED;
 
-	return 1;
+  return 1;
 }
 
 
@@ -258,8 +257,7 @@ uint16_t uart3_get_str(uint8_t *str) {
 }
 
 
-void USART3_IRQHandler(void)
-{
+void USART3_IRQHandler(void) {
   HAL_UART_IRQHandler(&huart3);
 }
 
@@ -271,56 +269,55 @@ extern volatile uint8_t usart2_DR;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart->Instance == USART3) {
-      usart3_buff[usart3_buff_n] = usart3_c;
-      usart3_buff_n++;
-      if (usart3_buff_n > (uint16_t)(sizeof(usart3_buff) - 1)) {
-        usart3_buff_n = 0;
-        //printf("USART OVERRUN!\n");
+    usart3_buff[usart3_buff_n] = usart3_c;
+    usart3_buff_n++;
+    if (usart3_buff_n > (uint16_t)(sizeof(usart3_buff) - 1)) {
+      usart3_buff_n = 0;
+      //printf("USART OVERRUN!\n");
+    }
+    if (usart3_c == 17) {
+      usart3_SPEC = 1;
+    } else if (usart3_c == '\n') {
+      usart3_DR = 2;
+    } else {
+      if (usart3_DR == 0) {
+        usart3_DR = 1;
       }
-      if (usart3_c == 17) {
-        usart3_SPEC = 1;
-      } else if (usart3_c == '\n') {
-        usart3_DR = 2;
-      } else {
-        if (usart3_DR == 0) {
-          usart3_DR = 1;
-        }
+    }
+
+    HAL_StatusTypeDef h;
+    // hal uart transmit sometimes locks the uart and timeouts,
+    // so it can't continue with receive
+    // and the whole thing would bork, old hal libs perhaps? dunno
+    __HAL_UNLOCK(huart);
+    while(h != HAL_OK) {
+      h = HAL_UART_Receive_IT(&huart3, &usart3_c, 1);
+
+      if(h == HAL_ERROR) {
+        printf("serial rcv init error\n");
       }
 
-      HAL_StatusTypeDef h;
-      // hal uart transmit sometimes locks the uart and timeouts,
-      // so it can't continue with receive
-      // and the whole thing would bork, old hal libs perhaps? dunno
-      __HAL_UNLOCK(huart);
-      while(h != HAL_OK) {
-        h = HAL_UART_Receive_IT(&huart3, &usart3_c, 1);
-
-        if(h == HAL_ERROR) {
-          printf("serial rcv init error\n");
-        }
-
-        if(h == HAL_BUSY) {
-          printf("serial rcv init error busy(state: %u lock: %u) \n", huart->RxState, huart->Lock);
-        }
+      if(h == HAL_BUSY) {
+        printf("serial rcv init error busy(state: %u lock: %u) \n", huart->RxState, huart->Lock);
       }
+    }
   }
 
   if (huart->Instance == USART2) {
-
-        usart2_buff[usart2_buff_n] = usart2_c[0];
-        usart2_buff_n++;
-        if (usart2_buff_n > sizeof(usart2_buff) - 1) {
-          usart2_buff_n = 0;
-        }
-        if (usart2_c[0] == '\n') {
-          usart2_DR = 2;
-        } else {
-          if (usart2_DR == 0) {
-            usart2_DR = 1;
-          }
-        }
-      __HAL_UNLOCK(huart); // will do the same here...
-      HAL_UART_Receive_IT(&huart2, usart2_c, 1);
+    usart2_buff[usart2_buff_n] = usart2_c[0];
+    usart2_buff_n++;
+    if (usart2_buff_n > sizeof(usart2_buff) - 1) {
+      usart2_buff_n = 0;
     }
+    if (usart2_c[0] == '\n') {
+      usart2_DR = 2;
+    } else {
+      if (usart2_DR == 0) {
+        usart2_DR = 1;
+      }
+    }
+    __HAL_UNLOCK(huart); // will do the same here...
+    HAL_UART_Receive_IT(&huart2, usart2_c, 1);
+  }
 }
 

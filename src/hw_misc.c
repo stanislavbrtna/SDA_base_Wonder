@@ -1,6 +1,5 @@
 #include "hw_misc.h"
 
-
 extern volatile wonderBoardRevisions boardRev;
 extern volatile float ADC_Measurement_const;
 
@@ -70,7 +69,6 @@ void tick_update_buttons() {
     }
   }
 }
-
 
 
 float get_batt_voltage() {
@@ -179,7 +177,7 @@ void show_splash() {
   } else {
     if (ppm_get_width((uint8_t *) "splash.ppm") == 320) {
       draw_ppm(0, 0, 1,(uint8_t *) "splash.ppm");
-    }else if (ppm_get_width((uint8_t *) "splash.ppm") == 160) {
+    } else if (ppm_get_width((uint8_t *) "splash.ppm") == 160) {
       draw_ppm(0, 0, 2,(uint8_t *) "splash.ppm");
     }
   }

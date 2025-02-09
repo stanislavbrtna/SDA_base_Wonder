@@ -273,7 +273,7 @@ int main() {
     printf("Setting LCD params: invert=%u, gamma_mode=%u\n", invert, gamma);
     lcd_set_params(gamma, invert);
     lcd_hw_init();
-
+    LCD_Fill(0x0);
     sda_conf_close(&s);
   }
 

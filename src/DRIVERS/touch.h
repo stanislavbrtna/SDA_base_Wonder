@@ -33,19 +33,19 @@ SOFTWARE.
 typedef struct {
   float cx;
   float cy;
-	float a[4];
-	float b[4];
-	float c[4];
-	float d[4];
-	float e[4];
-	float f[4];
+  float a[4];
+  float b[4];
+  float c[4];
+  float d[4];
+  float e[4];
+  float f[4];
 } touchCalibDataStruct;
 
 #include "../sda_platform.h"
 
 typedef struct {
-	uint16_t x;
-	uint16_t y;
+  uint16_t x;
+  uint16_t y;
 } touchXY;
 
 extern touchCalibDataStruct touchCalibData;
