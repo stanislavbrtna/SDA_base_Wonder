@@ -298,7 +298,7 @@ uint8_t svp_chdir(uint8_t* path) {
     // fill
     sda_strcp(path, currentDir, sizeof(currentDir));
   } else {
-    if(svp_strcmp(path, "..")) {
+    if(svp_strcmp(path, (uint8_t *)"..")) {
       // find last slash
       for(uint32_t i = sda_strlen(currentDir); i > 1; i--) {
         if(currentDir[i] == '/') {
@@ -306,11 +306,11 @@ uint8_t svp_chdir(uint8_t* path) {
           break;
         }
       }
-    } else if(svp_strcmp(path, ".")) {
+    } else if(svp_strcmp(path, (uint8_t *)".")) {
       // Do nothing
     } else {
       if(currentDir[sda_strlen(currentDir) - 1] != '/' && sda_strlen(currentDir) != 2) {
-        sda_str_add(currentDir, "/");
+        sda_str_add(currentDir, (uint8_t *)"/");
       }
       sda_str_add(currentDir, path);
     }
@@ -399,7 +399,7 @@ uint8_t svp_mount() {
     return 1; // mount error
   }else{
     sd_mounted = 1;
-    svp_chdir("/"); // reset the custom cwd field
+    svp_chdir((uint8_t *)"/"); // reset the custom cwd field
     return 0; // mount ok
   }
 }
