@@ -328,6 +328,18 @@ void system_clock_set_normal(void) {
   cpuClkLowFlag = 0;
 }
 
+//=============================================================================
+// Stubs
+
+void svp_set_volume(uint16_t val) {
+  //void
+  return;
+}
+
+void svp_haptic_fb(uint16_t time) {
+  return;
+}
+
 
 //=============================================================================
 // Error halt function (BSOD)

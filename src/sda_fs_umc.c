@@ -272,7 +272,7 @@ uint16_t svp_strlen(uint8_t *str) {
     x++;
   }
 
-  return x + 1; //vrátí len i s terminátorem
+  return x;
 }
 
 #ifdef FF_FS_EXFAT
@@ -282,8 +282,8 @@ uint8_t currentDir[512];
 
 uint8_t svp_chdir(uint8_t* path) {
   // remove slash on the end of path
-  if (path[svp_strlen(path - 1)] == '/' && svp_strlen(path - 1) != 0) {
-    path[svp_strlen(path - 1)] = 0;
+  if (path[svp_strlen(path) - 1] == '/' && svp_strlen(path) != 1) {
+    path[svp_strlen(path) - 1] = 0;
   }
 
   FRESULT f = f_chdir((char *)path);
@@ -329,8 +329,8 @@ uint8_t svp_getcwd(uint8_t* buf, uint16_t len) {
 
 uint8_t svp_chdir(uint8_t* path) {
   // remove slash on the end of path
-  if (path[svp_strlen(path - 1)] == '/' && svp_strlen(path - 1) != 0) {
-    path[svp_strlen(path - 1)] = 0;
+  if (path[svp_strlen(path) - 1] == '/' && svp_strlen(path) != 1) {
+    path[svp_strlen(path) - 1] = 0;
   }
 
   f_chdir((char *)path);

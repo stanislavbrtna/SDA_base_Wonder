@@ -287,8 +287,17 @@ int main() {
 
   while(1) {
     sda_main_loop();
+
     // Sleep mode handling
-    if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0 && sdaWakeupFlag == 0) {
+    svpSGlobal.powerSleepMode = sda_determine_sleep_mode();
+
+    if(svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_STANDBY) {
+      system_clock_set_low();
+    } else if (
+      svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP &&
+      Lcd_off_flag == 0 &&
+      sdaWakeupFlag == 0
+    ) {
       tick_lock = SDA_LOCK_LOCKED;
       wonder_enter_sleep();
       // update time

@@ -26,7 +26,7 @@ namespace __gnu_cxx
   __verbose_terminate_handler()
   {
     trace_puts(__func__);
-    abort();
+    //abort();
   }
 }
 
@@ -42,7 +42,7 @@ extern "C"
   __cxa_pure_virtual()
   {
     trace_puts(__func__);
-    abort();
+    //abort();
   }
 }
 
