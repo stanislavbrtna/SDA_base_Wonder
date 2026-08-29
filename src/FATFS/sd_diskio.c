@@ -104,7 +104,7 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		mainSD.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
 		mainSD.Init.BusWide = SDIO_BUS_WIDE_1B;
 		mainSD.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_ENABLE;
-		mainSD.Init.ClockDiv = 10;
+		mainSD.Init.ClockDiv = 150;
 	}
 	int tries;
 
@@ -112,9 +112,22 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		/* HAL SD initialization */
 		if(HAL_SD_Init(&mainSD) != HAL_OK)
 		{
+		    mainSD.Init.ClockDiv += 50;
+		    printf("SD init failed, setting init speed divider: %u\n", mainSD.Init.ClockDiv);
 				continue;
+		} else {
+
+		  while (HAL_SD_GetCardState(&mainSD) == HAL_SD_CARD_PROGRAMMING) {
+		    HAL_Delay(1);
+		  }
+
+		  mainSD.Init.ClockDiv = 32;
+
+		  if (HAL_SD_Init(&mainSD) != HAL_OK) {
+		    printf("SD init on high speed failed, set: %u\n", mainSD.Init.ClockDiv);
+		    return HAL_OK;
+		  }
 		}
-		//printf("ok:\n");
 
 		init = 1;
 
@@ -129,6 +142,7 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		}
 
 		/* Everything is ok */
+		printf("SD init OK\n");
 
 		return HAL_OK;
 	}

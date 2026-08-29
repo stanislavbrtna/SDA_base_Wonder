@@ -89,12 +89,14 @@ void set_9488_gamma(uint8_t val);
 
 uint8_t LCD_type;
 uint8_t LCD_delay;
+uint8_t LCD_delay_opt;
 uint8_t LCD_gamma_mode;
 uint8_t LCD_invert;
 
-void lcd_set_params(uint8_t gamma_mode, uint8_t invert) {
+void lcd_set_params(uint8_t gamma_mode, uint8_t invert, uint8_t delay_en) {
   LCD_gamma_mode = gamma_mode;
   LCD_invert = invert;
+  LCD_delay_opt = delay_en;
 }
 
 uint8_t lcd_hw_init() {
@@ -111,12 +113,11 @@ uint8_t lcd_hw_init() {
     // TODO: clean up the 9488 init seq.
     LCD_delay = 50;
     lcd_Init_Seq_9488_a(); //standard
-    LCD_delay = 0;
   } else {
     LCD_delay = 50;
     lcd_Init_Seq_9481_b();
-    LCD_delay = 1;
   }
+  LCD_delay = LCD_delay_opt;
 
   return 0;
 }
@@ -223,7 +224,7 @@ void lcd_Init_Seq_9488_a() {
   lcd_send_cmd_d(0xF1);  //exit sleep
 
   lcd_send_cmd_d(0x3A);  // interface pixel format
-  lcd_send_data(0x55);   // 16 bit pixel
+  lcd_send_data_d(0x55);   // 16 bit pixel
 
   //lcd_send_cmd_d(0XC0);   //Power Control 1
   //lcd_send_data(0x1F);    //Verg1out 17
@@ -244,7 +245,7 @@ void lcd_Init_Seq_9488_a() {
   set_9488_gamma(LCD_gamma_mode);
 
   lcd_send_cmd_d(0x36);  // set address mode
-    lcd_send_data(0x48);
+    lcd_send_data_d(0x48);
 
   lcd_send_cmd_d(0x11);  // sleep out
   lcd_Delay(150);
@@ -261,72 +262,72 @@ void set_9488_gamma(uint8_t val) {
   printf("setting gamma: %u\n", val);
   if(val == 0) {
     lcd_send_cmd_d(0xE0);
-      lcd_send_data(0x00);
-      lcd_send_data(0x07);
-      lcd_send_data(0x0C);
-      lcd_send_data(0x05);
-      lcd_send_data(0x13);
-      lcd_send_data(0x09);
-      lcd_send_data(0x36);
-      lcd_send_data(0xAA);
-      lcd_send_data(0x46);
-      lcd_send_data(0x09);
-      lcd_send_data(0x10);
-      lcd_send_data(0x0D);
-      lcd_send_data(0x1A);
-      lcd_send_data(0x1E);
-      lcd_send_data(0x0F);
+      lcd_send_data_d(0x00);
+      lcd_send_data_d(0x07);
+      lcd_send_data_d(0x0C);
+      lcd_send_data_d(0x05);
+      lcd_send_data_d(0x13);
+      lcd_send_data_d(0x09);
+      lcd_send_data_d(0x36);
+      lcd_send_data_d(0xAA);
+      lcd_send_data_d(0x46);
+      lcd_send_data_d(0x09);
+      lcd_send_data_d(0x10);
+      lcd_send_data_d(0x0D);
+      lcd_send_data_d(0x1A);
+      lcd_send_data_d(0x1E);
+      lcd_send_data_d(0x0F);
 
     lcd_send_cmd_d(0xE1);
-      lcd_send_data(0x00);
-      lcd_send_data(0x20);
-      lcd_send_data(0x23);
-      lcd_send_data(0x04);
-      lcd_send_data(0x10);
-      lcd_send_data(0x06);
-      lcd_send_data(0x37);
-      lcd_send_data(0x56);
-      lcd_send_data(0x49);
-      lcd_send_data(0x04);
-      lcd_send_data(0x0C);
-      lcd_send_data(0x0A);
-      lcd_send_data(0x33);
-      lcd_send_data(0x37);
-      lcd_send_data(0x0F);
+      lcd_send_data_d(0x00);
+      lcd_send_data_d(0x20);
+      lcd_send_data_d(0x23);
+      lcd_send_data_d(0x04);
+      lcd_send_data_d(0x10);
+      lcd_send_data_d(0x06);
+      lcd_send_data_d(0x37);
+      lcd_send_data_d(0x56);
+      lcd_send_data_d(0x49);
+      lcd_send_data_d(0x04);
+      lcd_send_data_d(0x0C);
+      lcd_send_data_d(0x0A);
+      lcd_send_data_d(0x33);
+      lcd_send_data_d(0x37);
+      lcd_send_data_d(0x0F);
   } else if(val == 1) {
     lcd_send_cmd_d(0xE0);
-      lcd_send_data(0x00);
-      lcd_send_data(0x07);
-      lcd_send_data(0x0f);
-      lcd_send_data(0x0D);
-      lcd_send_data(0x1B);
-      lcd_send_data(0x0A);
-      lcd_send_data(0x3c);
-      lcd_send_data(0x78);
-      lcd_send_data(0x4A);
-      lcd_send_data(0x07);
-      lcd_send_data(0x0E);
-      lcd_send_data(0x09);
-      lcd_send_data(0x1B);
-      lcd_send_data(0x1e);
-      lcd_send_data(0x0f);
+      lcd_send_data_d(0x00);
+      lcd_send_data_d(0x07);
+      lcd_send_data_d(0x0f);
+      lcd_send_data_d(0x0D);
+      lcd_send_data_d(0x1B);
+      lcd_send_data_d(0x0A);
+      lcd_send_data_d(0x3c);
+      lcd_send_data_d(0x78);
+      lcd_send_data_d(0x4A);
+      lcd_send_data_d(0x07);
+      lcd_send_data_d(0x0E);
+      lcd_send_data_d(0x09);
+      lcd_send_data_d(0x1B);
+      lcd_send_data_d(0x1e);
+      lcd_send_data_d(0x0f);
 
     lcd_send_cmd_d(0xE1);
-      lcd_send_data(0x00);
-      lcd_send_data(0x22);
-      lcd_send_data(0x24);
-      lcd_send_data(0x06);
-      lcd_send_data(0x12);
-      lcd_send_data(0x07);
-      lcd_send_data(0x36);
-      lcd_send_data(0x47);
-      lcd_send_data(0x47);
-      lcd_send_data(0x06);
-      lcd_send_data(0x0a);
-      lcd_send_data(0x07);
-      lcd_send_data(0x30);
-      lcd_send_data(0x37);
-      lcd_send_data(0x0f);
+      lcd_send_data_d(0x00);
+      lcd_send_data_d(0x22);
+      lcd_send_data_d(0x24);
+      lcd_send_data_d(0x06);
+      lcd_send_data_d(0x12);
+      lcd_send_data_d(0x07);
+      lcd_send_data_d(0x36);
+      lcd_send_data_d(0x47);
+      lcd_send_data_d(0x47);
+      lcd_send_data_d(0x06);
+      lcd_send_data_d(0x0a);
+      lcd_send_data_d(0x07);
+      lcd_send_data_d(0x30);
+      lcd_send_data_d(0x37);
+      lcd_send_data_d(0x0f);
   } else if(val == 2) {
     lcd_send_cmd_d(0xE0); // gamma settings too dark, use those from 9486
       lcd_send_data_d(0x00);
@@ -364,38 +365,38 @@ void set_9488_gamma(uint8_t val) {
   } else if(val == 3) {
     // same as 0, just inverted
     lcd_send_cmd_d(0xE0);
-      lcd_send_data(0x00);
-      lcd_send_data(0x20);
-      lcd_send_data(0x23);
-      lcd_send_data(0x04);
-      lcd_send_data(0x10);
-      lcd_send_data(0x06);
-      lcd_send_data(0x37);
-      lcd_send_data(0x56);
-      lcd_send_data(0x49);
-      lcd_send_data(0x04);
-      lcd_send_data(0x0C);
-      lcd_send_data(0x0A);
-      lcd_send_data(0x33);
-      lcd_send_data(0x37);
-      lcd_send_data(0x0F);
+      lcd_send_data_d(0x00);
+      lcd_send_data_d(0x20);
+      lcd_send_data_d(0x23);
+      lcd_send_data_d(0x04);
+      lcd_send_data_d(0x10);
+      lcd_send_data_d(0x06);
+      lcd_send_data_d(0x37);
+      lcd_send_data_d(0x56);
+      lcd_send_data_d(0x49);
+      lcd_send_data_d(0x04);
+      lcd_send_data_d(0x0C);
+      lcd_send_data_d(0x0A);
+      lcd_send_data_d(0x33);
+      lcd_send_data_d(0x37);
+      lcd_send_data_d(0x0F);
 
     lcd_send_cmd_d(0xE1);
-      lcd_send_data(0x00);
-      lcd_send_data(0x07);
-      lcd_send_data(0x0C);
-      lcd_send_data(0x05);
-      lcd_send_data(0x13);
-      lcd_send_data(0x09);
-      lcd_send_data(0x36);
-      lcd_send_data(0xAA);
-      lcd_send_data(0x46);
-      lcd_send_data(0x09);
-      lcd_send_data(0x10);
-      lcd_send_data(0x0D);
-      lcd_send_data(0x1A);
-      lcd_send_data(0x1E);
-      lcd_send_data(0x0F);
+      lcd_send_data_d(0x00);
+      lcd_send_data_d(0x07);
+      lcd_send_data_d(0x0C);
+      lcd_send_data_d(0x05);
+      lcd_send_data_d(0x13);
+      lcd_send_data_d(0x09);
+      lcd_send_data_d(0x36);
+      lcd_send_data_d(0xAA);
+      lcd_send_data_d(0x46);
+      lcd_send_data_d(0x09);
+      lcd_send_data_d(0x10);
+      lcd_send_data_d(0x0D);
+      lcd_send_data_d(0x1A);
+      lcd_send_data_d(0x1E);
+      lcd_send_data_d(0x0F);
   }
 
   // else: set nothing
@@ -525,7 +526,7 @@ inline void lcd_send_data(uint8_t data) {
 
   lcd_set_WR_low();
   if(LCD_delay) {
-    lcd_Delay(2); //5
+    lcd_Delay(15); //5
   }
   lcd_set_WR_high();
 }

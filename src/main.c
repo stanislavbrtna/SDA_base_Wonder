@@ -267,11 +267,12 @@ int main() {
   // LCD config
   sda_conf s;
   if(sda_conf_open( &s, "lcd.cfg")) {
-    uint8_t invert = (uint8_t)sda_conf_key_read_i32( &s, "invert", 0);
-    uint8_t gamma  = (uint8_t)sda_conf_key_read_i32( &s, "gamma_mode", 0);
+    uint8_t invert = (uint8_t)sda_conf_key_read_i32( &s, (uint8_t*)"invert", 0);
+    uint8_t gamma  = (uint8_t)sda_conf_key_read_i32( &s, (uint8_t*)"gamma_mode", 0);
+    uint8_t delay = (uint8_t)sda_conf_key_read_i32( &s, (uint8_t*)"delay", 1);
 
     printf("Setting LCD params: invert=%u, gamma_mode=%u\n", invert, gamma);
-    lcd_set_params(gamma, invert);
+    lcd_set_params(gamma, invert, delay);
     lcd_hw_init();
     LCD_Fill(0x0);
     sda_conf_close(&s);
