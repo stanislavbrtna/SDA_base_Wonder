@@ -70,6 +70,36 @@ void SD_setSpeedHi() {
 	}
 }
 
+void SD_Debug_PrintErrors(SD_HandleTypeDef *p_hsd)
+{
+    uint32_t error = p_hsd->ErrorCode;
+
+    if (error == HAL_SD_ERROR_NONE)
+    {
+        printf("[SD INFO] No errors detected. Card health is OK.\r\n");
+        return;
+    }
+
+    printf("[SD ERROR] Error detected! Bitmask: 0x%08X\r\n", (unsigned int)error);
+
+    /* Bitmask evaluation */
+    if (error & HAL_SD_ERROR_CMD_CRC_FAIL)       printf(" -> CMD CRC FAIL: Command checksum error.\r\n");
+    if (error & HAL_SD_ERROR_DATA_CRC_FAIL)      printf(" -> DATA CRC FAIL: Data checksum error (Check wiring/pull-ups).\r\n");
+    if (error & HAL_SD_ERROR_CMD_RSP_TIMEOUT)    printf(" -> CMD TIMEOUT: Card failed to respond to command.\r\n");
+    if (error & HAL_SD_ERROR_DATA_TIMEOUT)       printf(" -> DATA TIMEOUT: Read/Write operation timed out.\r\n");
+    if (error & HAL_SD_ERROR_TX_UNDERRUN)        printf(" -> TX UNDERRUN: MCU failed to feed FIFO during write operation.\r\n");
+    if (error & HAL_SD_ERROR_RX_OVERRUN)         printf(" -> RX OVERRUN: MCU failed to read FIFO in time during read operation.\r\n");
+    if (error & HAL_SD_ERROR_ADDR_OUT_OF_RANGE)  printf(" -> ADDR OUT OF RANGE: Requested block address out of bounds.\r\n");
+    if (error & HAL_SD_ERROR_REQUEST_NOT_APPLICABLE) printf(" -> NOT APPLICABLE: Command unsupported by this card class.\r\n");
+    //if (error & HAL_SD_ERROR_BAD_CURRENT_STATE)  printf(" -> BAD CURRENT STATE: Card in invalid operational state.\r\n");
+    if (error & HAL_SD_ERROR_PARAM)              printf(" -> PARAM ERROR: Invalid command parameter.\r\n");
+    if (error & SDMMC_ERROR_TIMEOUT)             printf(" -> TIMEOUT ERROR: ???.\r\n");
+    if (error &  SDMMC_ERROR_LOCK_UNLOCK_FAILED) printf(" -> LOCK UNLOCK FAILED: Try mount&umount with a pc, might fix that.\r\n");
+   
+    /* Clear error code register to allow recovery */
+    p_hsd->ErrorCode = HAL_SD_ERROR_NONE;
+}
+
 HAL_StatusTypeDef sda_sdio_hw_init() {
 	static uint8_t init;
 
@@ -86,7 +116,7 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		/* Common GPIO configuration */
 		GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
 		GPIO_InitStruct.Pull      = GPIO_NOPULL;
-		GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_MEDIUM;
 		GPIO_InitStruct.Alternate = GPIO_AF12_SDMMC;
 
 		/* GPIOC configuration */
@@ -106,35 +136,41 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		mainSD.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_ENABLE;
 		mainSD.Init.ClockDiv = 10;
 	}
-	int tries;
+  
 
-	for(tries = 0; tries < 10; ++tries) {
-		/* HAL SD initialization */
-		if(HAL_SD_Init(&mainSD) != HAL_OK)
-		{
-				continue;
-		}
-		//printf("ok:\n");
+  HAL_SD_DeInit(&mainSD);
 
-		init = 1;
+  if(HAL_SD_Init(&mainSD) != HAL_OK) {
+	  printf("SD init: init error!\n");
+    printf("ErrorCode: %u\n", (unsigned int)mainSD.ErrorCode);
+    SD_Debug_PrintErrors(&mainSD);
+    return HAL_ERROR;
+  }
 
-		//Enable wide operation
-		if(HAL_SD_ConfigWideBusOperation(&mainSD, SDIO_BUS_WIDE_4B) != HAL_OK)
-		{
-			if (tries > 5){
-				printf("going in 1bit mode\n");
-				return HAL_OK;
-			}	else
-			continue;
-		}
+  if(HAL_SD_ConfigWideBusOperation(&mainSD, SDIO_BUS_WIDE_4B) != HAL_OK) {
+    printf("SD init: switch to 4bits error!\n");
+    printf("ErrorCode: %u\n", (unsigned int)mainSD.ErrorCode);
+    SD_Debug_PrintErrors(&mainSD);
+    return HAL_ERROR;     
+  }
+  
+  HAL_SD_CardInfoTypeDef CardInfo;
+      
+  if(HAL_SD_GetCardInfo(&mainSD, &CardInfo) != HAL_OK) {
+    printf("SD init: get card info error!\n");
+    printf("ErrorCode: %u\n", (unsigned int)mainSD.ErrorCode);
+    SD_Debug_PrintErrors(&mainSD);
+    return HAL_ERROR;
+  }
 
-		/* Everything is ok */
+  printf("SD Info:\n");
+  printf("CardType:    %u\n", CardInfo.CardType);
+  printf("CardVersion: %u\n", CardInfo.CardVersion);
+  printf("Class:       %u\n", CardInfo.Class);
+  printf("BlockNbr:    %u\n", CardInfo.BlockNbr);
 
-		return HAL_OK;
-	}
-	init = 2;
-	printf("SD init failed\n");
-	return HAL_ERROR;
+  printf("SD init OK\n");
+	return HAL_OK;
 }
 
 /**
