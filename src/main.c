@@ -221,10 +221,15 @@ int main() {
 
   // power status update
   update_power_status();
+  
+  // Test LCD, init post
+  lcd_bw_test();
+  postInit();
 
   // if not powered from usb:
   if (svpSGlobal.pwrType == POWER_BATT) {
     batt_val = 0;
+    postMessage("Measuring battery level.");
     //measure the initial battery state
     while (batt_val == 0) {
       measureBatteryVoltage();
@@ -232,27 +237,29 @@ int main() {
     // and eventualy halt
     lowBattCheckAndHalt();
   }
-
-  // Blink with LCD and with notif. led
-  lcd_bw_test();
+  
+  postMessage("Hold UP for touch calibration");
+  HAL_Delay(1250);
 
   // UP on both board revisions goes straight to calibration
   if (HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET) {
     printf("LCD Calibration!\n");
     sda_calibrate();
     sda_setLcdCalibrationFlag(1);
+
+    postInit();
+    postMessage("Display calibration done.");
   }
 
   if (sda_card_inserted() == 0) {
-      LCD_Fill(LCD_MixColor(255, 0, 0));
-      LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"SDA Error:\nSD card not found!\nPlease insert SD card.");
-
-      LCD_DrawText_ext(32, 320, 0xFFFF, (uint8_t *)"SDA-OS v."SDA_OS_VERSION);
+      postMessage("SD: Card not found!");
+      postError("Please insert SD Card.");
   #ifdef PC
       getchar();
   #else
       while(1){
         if (sda_card_inserted()) {
+          postMessage("SD: Card inserted.");
           break;
         }
       }
@@ -260,30 +267,55 @@ int main() {
   }
 
   // FS mount is performed after the power check, to prevent SD corruption
-  svp_mount();
+  uint32_t mountTries = 5;
+  postMessage("SD: Mounting FS...");
+  while(1) {
+    if (svp_mount() == 0) {
+      postMessage("SD: Success");
+      break;
+    }
 
+    mountTries--;
+
+    if(mountTries == 0) {
+      postError("SD: Mount failed");
+      postError("Fix card and press reset.");
+    }
+    postMessage("SD: Mount error, trying again...");
+  }
+  
   sda_set_led(0);
 
   // LCD config
   sda_conf s;
-  if(sda_conf_open( &s, "lcd.cfg")) {
-    uint8_t invert = (uint8_t)sda_conf_key_read_i32( &s, "invert", 0);
-    uint8_t gamma  = (uint8_t)sda_conf_key_read_i32( &s, "gamma_mode", 0);
+  if(HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
+    postMessage("Skipped display config (lcd.cfg).");
+  } else {
+    if(sda_conf_open(&s, "lcd.cfg")) {
+      uint8_t invert = (uint8_t)sda_conf_key_read_i32( &s, "invert", 0);
+      uint8_t gamma  = (uint8_t)sda_conf_key_read_i32( &s, "gamma_mode", 0);
 
-    printf("Setting LCD params: invert=%u, gamma_mode=%u\n", invert, gamma);
-    lcd_set_params(gamma, invert);
-    lcd_hw_init();
-    LCD_Fill(0x0);
-    sda_conf_close(&s);
+      printf("Setting LCD params: invert=%u, gamma_mode=%u\n", invert, gamma);
+      lcd_set_params(gamma, invert);
+      lcd_hw_init();
+      sda_conf_close(&s);
+      
+      postInit();
+      postMessage("Display config (lcd.cfg) loaded.");
+    }
   }
+  
 
   show_splash();
 
   touch_lock = SDA_LOCK_UNLOCKED;
 
   // Update time before jumping into main
+  postMessage("Loading time and date.");
   rtc_update_struct();
   sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
+
+  postSuccess("Done, entering main loop.");
 
   while(1) {
     sda_main_loop();

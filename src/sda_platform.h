@@ -21,6 +21,7 @@ typedef enum {UNKNOWN, REV1, REV2B} wonderBoardRevisions;
 #include "DRIVERS/power_management.h"
 #include "SDA_OS/SDA_OS.h"
 #include "hw_misc.h"
+#include "BASE_SHARED/post.h"
 
 void sda_platform_gpio_init();
 void SystemClock_Config();
