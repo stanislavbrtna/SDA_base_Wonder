@@ -116,7 +116,7 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		/* Common GPIO configuration */
 		GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
 		GPIO_InitStruct.Pull      = GPIO_NOPULL;
-		GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_MEDIUM;
+		GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
 		GPIO_InitStruct.Alternate = GPIO_AF12_SDMMC;
 
 		/* GPIOC configuration */
@@ -133,8 +133,8 @@ HAL_StatusTypeDef sda_sdio_hw_init() {
 		mainSD.Init.ClockBypass = SDIO_CLOCK_BYPASS_DISABLE;
 		mainSD.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
 		mainSD.Init.BusWide = SDIO_BUS_WIDE_1B;
-		mainSD.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_ENABLE;
-		mainSD.Init.ClockDiv = 10;
+		mainSD.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
+		mainSD.Init.ClockDiv = 2;
 	}
   
 
@@ -224,6 +224,7 @@ DRESULT disk_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     DRESULT  res = RES_ERROR;
     uint32_t timeout = 0;
     SD_setSpeedHi();
+    __disable_irq();
     res = RES_ERROR;
     if(HAL_SD_ReadBlocks(&mainSD, buff,(uint32_t) (sector), count, 10000000) == HAL_OK) {
 
@@ -231,12 +232,16 @@ DRESULT disk_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
         while(HAL_SD_GetCardState(&mainSD) != HAL_SD_CARD_TRANSFER) {
             if(timeout > 100000){
             	printf ("read failed (%u) (sector: %u, count: %u)\n",(unsigned int)mainSD.ErrorCode, (unsigned int)sector, (unsigned int)count);
-            	return RES_ERROR;
+            	__enable_irq();
+              return RES_ERROR;
             }
             timeout++;
         }
+        __enable_irq();
         return RES_OK;
     }
+    SD_Debug_PrintErrors(&mainSD);
+    __enable_irq();
     return res;
 }
 
@@ -255,6 +260,7 @@ DRESULT disk_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
   DRESULT res = RES_ERROR;
   uint32_t timeout = 0;
   SD_setSpeedHi();
+  __disable_irq();
 		if(HAL_SD_WriteBlocks(&mainSD,(uint8_t *) buff,
         (uint32_t)(sector),
         count, 1000000) == HAL_OK) {
@@ -263,13 +269,15 @@ DRESULT disk_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 			while(timeout++ != 10000000) {
 			        		//printf("loop?\n");
 			            if(HAL_SD_GetCardState(&mainSD) == HAL_SD_CARD_TRANSFER) {
+                    __enable_irq();
 			                return RES_OK;
 			            }
 			 }
 		} else {
 			printf ("write failed (%u) (sector: %u, count: %u)\n",(unsigned int)mainSD.ErrorCode, (unsigned int)sector, (unsigned int)count);
 		}
-
+    SD_Debug_PrintErrors(&mainSD);
+    __enable_irq();
   return res;
 }
 
