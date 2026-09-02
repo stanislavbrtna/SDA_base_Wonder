@@ -225,6 +225,7 @@ int main() {
   // Test LCD, init post
   lcd_bw_test();
   postInit();
+  postMessage("Build: " __DATE__ " " __TIME__);
 
   // if not powered from usb:
   if (svpSGlobal.pwrType == POWER_BATT) {
