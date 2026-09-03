@@ -2,7 +2,7 @@
 
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
-extern RNG_HandleTypeDef  rng;
+extern RNG_HandleTypeDef rng;
 
 extern uint8_t led_pattern[10];
 extern uint16_t led_counter;
@@ -87,17 +87,15 @@ void led_set_pattern(ledPatternType pat) {
   led_counter = 0;
 }
 
-
 //=============================================================================
 // get if SD is inserted
 
 uint8_t sda_card_inserted() {
-  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_SET) {
+  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_SET) {
     return 0;
   }
   return 1;
 }
-
 
 //=============================================================================
 // Expansion serial port (uart3)
@@ -123,36 +121,23 @@ void sda_serial_init_bd(uint32_t bd) {
   sdaSerialEnabled = 1;
 }
 
-uint8_t sda_serial_is_enabled() {
-  return sdaSerialEnabled;
-}
+uint8_t sda_serial_is_enabled() { return sdaSerialEnabled; }
 
 // blocking functions
 uint8_t sda_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
   return uart3_recieve(str, len, timeout);
 }
 
-void sda_serial_transmit(uint8_t *str, uint32_t len) {
-  uart3_transmit(str, len);
-}
+void sda_serial_transmit(uint8_t *str, uint32_t len) { uart3_transmit(str, len); }
 
 // interrupt enabled functions:
-uint8_t sda_serial_recieve_init() {
-  return uart3_recieve_IT();
-}
+uint8_t sda_serial_recieve_init() { return uart3_recieve_IT(); }
 
-uint8_t sda_serial_get_rdy() {
-  return uart3_get_rdy();
-}
+uint8_t sda_serial_get_rdy() { return uart3_get_rdy(); }
 
-uint16_t sda_serial_get_str(uint8_t *str) {
-  return uart3_get_str(str);
-}
+uint16_t sda_serial_get_str(uint8_t *str) { return uart3_get_str(str); }
 
-uint8_t sda_serial_get_spec() {
-  return uart3_get_spec();
-}
-
+uint8_t sda_serial_get_spec() { return uart3_get_spec(); }
 
 //=============================================================================
 // USB serial port (uart2)
@@ -177,38 +162,24 @@ void sda_usb_serial_disable() {
   MX_USART2_UART_DeInit();
 }
 
-uint8_t sda_usb_serial_is_enabled() {
-  return sdaUsbSerialEnabled;
-}
+uint8_t sda_usb_serial_is_enabled() { return sdaUsbSerialEnabled; }
 
 uint8_t sda_usb_serial_recieve(uint8_t *str, uint32_t len, uint32_t timeout) {
   return uart2_recieve(str, len, timeout);
 }
 
-void sda_usb_serial_transmit(uint8_t *str, uint32_t len) {
-  uart2_transmit(str, len);
-}
+void sda_usb_serial_transmit(uint8_t *str, uint32_t len) { uart2_transmit(str, len); }
 
 // interrupt enabled functions:
-uint8_t sda_usb_serial_recieve_init() {
-  return uart2_recieve_IT();
-}
+uint8_t sda_usb_serial_recieve_init() { return uart2_recieve_IT(); }
 
-uint8_t sda_usb_serial_get_rdy() {
-  return uart2_get_rdy();
-}
+uint8_t sda_usb_serial_get_rdy() { return uart2_get_rdy(); }
 
-uint16_t sda_usb_serial_get_str(uint8_t *str) {
-  return uart2_get_str(str);
-}
+uint16_t sda_usb_serial_get_str(uint8_t *str) { return uart2_get_str(str); }
 
-void sda_usb_enable_for_dbg(uint8_t val) {
-  sdaUsbSerialForDebug = val;
-}
+void sda_usb_enable_for_dbg(uint8_t val) { sdaUsbSerialForDebug = val; }
 
-uint8_t sda_usb_get_enable_for_dbg() {
-  return sdaUsbSerialForDebug;
-}
+uint8_t sda_usb_get_enable_for_dbg() { return sdaUsbSerialForDebug; }
 
 //=============================================================================
 // hw RNG
@@ -216,30 +187,26 @@ uint8_t sda_usb_get_enable_for_dbg() {
 uint32_t svp_random() {
   uint32_t ret = 0;
   HAL_RNG_GenerateRandomNumber(&rng, &ret);
-  return ret/2;
+  return ret / 2;
 }
-
 
 //=============================================================================
 // LCD on/off, backlight
 
 void svp_set_lcd_state(lcdStateType state) {
-  if(state == LCD_ON) {
+  if (state == LCD_ON) {
     lcd_hw_wake();
-    Lcd_on_flag  = 200;
+    Lcd_on_flag = 200;
     Lcd_off_flag = 0;
   } else if (state == LCD_OFF) {
     lcd_bl_off();
     Lcd_off_flag = 30;
-    Lcd_on_flag  = 0;
+    Lcd_on_flag = 0;
   }
   svpSGlobal.lcdState = state;
 }
 
-void svp_set_backlight(uint8_t val) {
-  lcd_hw_set_backlight(val);
-}
-
+void svp_set_backlight(uint8_t val) { lcd_hw_set_backlight(val); }
 
 //=============================================================================
 // battery voltage measurement
@@ -256,17 +223,14 @@ uint8_t sda_is_battery_measured() {
   }
 }
 
-float sda_get_battery_voltage() {
-  return get_batt_voltage();
-}
-
+float sda_get_battery_voltage() { return get_batt_voltage(); }
 
 //=============================================================================
 // System clock settings
 
 void system_clock_set_low(void) {
 
-  if(cpuClkLowFlag == 1) {
+  if (cpuClkLowFlag == 1) {
     return;
   }
   // Enable Power Control clock
@@ -276,22 +240,22 @@ void system_clock_set_low(void) {
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
   HAL_RCC_DeInit();
-  //hse config
+  // hse config
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = (HSE_VALUE/1000000u);
+  RCC_OscInitStruct.PLL.PLLM = (HSE_VALUE / 1000000u);
   RCC_OscInitStruct.PLL.PLLN = 336;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV8; /* 168 MHz */ //div2
-  RCC_OscInitStruct.PLL.PLLQ = 7; /* To make USB work. */
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV8; /* 168 MHz */ // div2
+  RCC_OscInitStruct.PLL.PLLQ = 7;                           /* To make USB work. */
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct)==HAL_ERROR)
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_ERROR)
     printf("ERROR kdyz menim freq! na 42mhz\n");
 
   // Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
   // clocks dividers
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK
-    | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+  RCC_ClkInitStruct.ClockType =
+      (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 
   // This is expected to work for most large cores.
@@ -303,11 +267,11 @@ void system_clock_set_low(void) {
 
   SystemCoreClockUpdate();
 
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000);
 
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2); //max 144Mhz
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2); // max 144Mhz
 
   reload_clock_sensitive_stuff();
 
@@ -316,7 +280,7 @@ void system_clock_set_low(void) {
 
 void system_clock_set_normal(void) {
 
-  if(cpuClkLowFlag == 0) {
+  if (cpuClkLowFlag == 0) {
     return;
   }
 
@@ -332,14 +296,11 @@ void system_clock_set_normal(void) {
 // Stubs
 
 void svp_set_volume(uint16_t val) {
-  //void
+  // void
   return;
 }
 
-void svp_haptic_fb(uint16_t time) {
-  return;
-}
-
+void svp_haptic_fb(uint16_t time) { return; }
 
 //=============================================================================
 // Error halt function (BSOD)
@@ -350,7 +311,6 @@ void svs_hardErrHandler() {
   LCD_DrawText_ext(32, 100, 0xFFFF, (uint8_t *)"Hard error occured!\nSDA-os will now reset!");
   Delay(50000000);
   HAL_NVIC_SystemReset();
-  while(1);
+  while (1)
+    ;
 }
-
-

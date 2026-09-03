@@ -11,37 +11,36 @@ volatile uint32_t batt_val;
 volatile uint32_t voltage_ref_val;
 volatile float batt_adc_const;
 
-
 void tick_update_buttons() {
   static uint8_t btn[6];
   static uint8_t btn_old[6];
 
-  if(HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET) {
+  if (HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET) {
     btn[0] = 1;
   } else {
     btn[0] = 0;
   }
-  if(HAL_GPIO_ReadPin(SDA_BASE_BTN_LEFT_PORT, SDA_BASE_BTN_LEFT_PIN) == GPIO_PIN_SET) {
+  if (HAL_GPIO_ReadPin(SDA_BASE_BTN_LEFT_PORT, SDA_BASE_BTN_LEFT_PIN) == GPIO_PIN_SET) {
     btn[1] = 1;
   } else {
     btn[1] = 0;
   }
-  if(HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET) {
+  if (HAL_GPIO_ReadPin(SDA_BASE_BTN_UP_PORT, SDA_BASE_BTN_UP_PIN) == GPIO_PIN_SET) {
     btn[2] = 1;
   } else {
     btn[2] = 0;
   }
-  if(HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
+  if (HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
     btn[3] = 1;
   } else {
     btn[3] = 0;
   }
-  if(HAL_GPIO_ReadPin(SDA_BASE_BTN_RIGHT_PORT, SDA_BASE_BTN_RIGHT_PIN) == GPIO_PIN_SET) {
+  if (HAL_GPIO_ReadPin(SDA_BASE_BTN_RIGHT_PORT, SDA_BASE_BTN_RIGHT_PIN) == GPIO_PIN_SET) {
     btn[4] = 1;
   } else {
     btn[4] = 0;
   }
-  if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
+  if (HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
     btn[5] = 1;
   } else {
     btn[5] = 0;
@@ -70,15 +69,14 @@ void tick_update_buttons() {
   }
 }
 
-
 float get_batt_voltage() {
   // get current conversion constant
-  /*printf("measuring: ref: %u, const: %u, battAdcVal: %u voltage:%u\n",
-          voltage_ref_val,
-          (uint32_t)(batt_adc_const*100000),
-          batt_val,
-          (uint32_t) ((float)batt_val * batt_adc_const * 100.0)
-  );*/
+  // printf("measuring: ref: %u, const: %u, battAdcVal: %u voltage:%u\n",
+  //         voltage_ref_val,
+  //         (uint32_t)(batt_adc_const*100000),
+  //         batt_val,
+  //         (uint32_t) ((float)batt_val * batt_adc_const * 100.0)
+  // );
 
   if (boardRev == REV2B) {
     // some real weird stuff happened before there was this "catch zero in ref val"
@@ -86,7 +84,8 @@ float get_batt_voltage() {
     if (voltage_ref_val != 0) {
       batt_adc_const = (VOLTAGE_REF_VAL_DEF) / (float)voltage_ref_val;
       ADC_Measurement_const = batt_adc_const;
-      return ( (((float)batt_val) * batt_adc_const) / 0.6); //1.666 is a const of the battery voltage divider
+      return ((((float)batt_val) * batt_adc_const) /
+              0.6); // 1.666 is a const of the battery voltage divider
     } else {
       return (((float)batt_val) * batt_adc_const);
     }
@@ -96,7 +95,6 @@ float get_batt_voltage() {
 
   return 0;
 }
-
 
 void updateTouchScreen() {
   static uint8_t touchPrev;
@@ -133,7 +131,6 @@ void updateTouchScreen() {
   }
 }
 
-
 void measureBatteryVoltage() {
   static uint16_t batt_cnt;
   static systemPwrType oldBattState;
@@ -154,7 +151,7 @@ void measureBatteryVoltage() {
 
     temp = 0;
     temp2 = 0;
-    for(i = 0; i < 29; i++) {
+    for (i = 0; i < 29; i++) {
       temp += batt_array[i];
       temp2 += vreff_array[i];
     }
@@ -170,37 +167,35 @@ void measureBatteryVoltage() {
   oldBattState = svpSGlobal.pwrType;
 }
 
-
 void show_splash() {
-  if (svp_fexists((uint8_t *) "splash.p16")) {
-    draw_ppm(0, 0, 1,(uint8_t *) "splash.p16");
+  if (svp_fexists((uint8_t *)"splash.p16")) {
+    draw_ppm(0, 0, 1, (uint8_t *)"splash.p16");
   } else {
-    if (ppm_get_width((uint8_t *) "splash.ppm") == 320) {
-      draw_ppm(0, 0, 1,(uint8_t *) "splash.ppm");
-    } else if (ppm_get_width((uint8_t *) "splash.ppm") == 160) {
-      draw_ppm(0, 0, 2,(uint8_t *) "splash.ppm");
+    if (ppm_get_width((uint8_t *)"splash.ppm") == 320) {
+      draw_ppm(0, 0, 1, (uint8_t *)"splash.ppm");
+    } else if (ppm_get_width((uint8_t *)"splash.ppm") == 160) {
+      draw_ppm(0, 0, 2, (uint8_t *)"splash.ppm");
     }
   }
 
-  for(uint32_t count = 1000000; count != 0; count--) {
-    if(HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
+  for (uint32_t count = 1000000; count != 0; count--) {
+    if (HAL_GPIO_ReadPin(SDA_BASE_BTN_B_PORT, SDA_BASE_BTN_B_PIN) == GPIO_PIN_SET) {
       break;
     }
-    if(HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET) {
+    if (HAL_GPIO_ReadPin(SDA_BASE_BTN_A_PORT, SDA_BASE_BTN_A_PIN) == GPIO_PIN_SET) {
       break;
     }
-    if(HAL_GPIO_ReadPin(SDA_BASE_BTN_LEFT_PORT, SDA_BASE_BTN_LEFT_PIN) == GPIO_PIN_SET) {
+    if (HAL_GPIO_ReadPin(SDA_BASE_BTN_LEFT_PORT, SDA_BASE_BTN_LEFT_PIN) == GPIO_PIN_SET) {
       break;
     }
-    if(HAL_GPIO_ReadPin(SDA_BASE_BTN_RIGHT_PORT, SDA_BASE_BTN_RIGHT_PIN) == GPIO_PIN_SET) {
+    if (HAL_GPIO_ReadPin(SDA_BASE_BTN_RIGHT_PORT, SDA_BASE_BTN_RIGHT_PIN) == GPIO_PIN_SET) {
       break;
     }
-    if(HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
+    if (HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
       break;
     }
   }
 }
-
 
 void lcd_bw_test() {
   LCD_Fill(0xFFFF);
@@ -215,7 +210,6 @@ void lcd_bw_test() {
   LCD_setDrawArea(0, 0, 319, 479);
 }
 
-
 // led pattern array
 volatile uint8_t led_pattern[10];
 uint16_t led_counter;
@@ -228,7 +222,7 @@ void tick_update_status_led() {
     led_cnt++;
   } else {
     led_cnt = 0;
-    //práce s patternem ledky
+    // práce s patternem ledky
     if (led_pattern[led_counter] != led_state) {
       if (led_pattern[led_counter] == 1) {
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);

@@ -17,9 +17,9 @@ volatile wonderBoardRevisions boardRev;
 uint32_t uptimeSleepStart;
 
 // misc system locks
-volatile sdaLockState touch_lock;  // disables touch in irq
-volatile sdaLockState irq_lock;    // disables touch, redraw in irq and battery measurement
-volatile sdaLockState tick_lock;   // disables all systick stuff
+volatile sdaLockState touch_lock; // disables touch in irq
+volatile sdaLockState irq_lock;   // disables touch, redraw in irq and battery measurement
+volatile sdaLockState tick_lock;  // disables all systick stuff
 
 // systick globals
 volatile uint32_t counter;
@@ -46,12 +46,12 @@ void beep_timer_init();
 void rrand_init();
 
 void power_button_handler();
-void lcd_handler ();
+void lcd_handler();
 
 void Delay(__IO uint32_t nCount) {
-  for(; nCount != 0; nCount--);
+  for (; nCount != 0; nCount--)
+    ;
 }
-
 
 // Systick
 void SysTick_Handler(void) {
@@ -82,14 +82,15 @@ void SysTick_Handler(void) {
     if (irq_lock == SDA_LOCK_UNLOCKED) {
       irq_lock = SDA_LOCK_LOCKED;
       update_power_status();
-      if(sec < 300) {
+      if (sec < 300) {
         sec++;
       } else {
         sec = 0;
         // time update event
         rtc_update_struct();
 
-        sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
+        sda_irq_update_timestruct(
+            rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
         measureBatteryVoltage();
       }
 
@@ -107,30 +108,25 @@ void SysTick_Handler(void) {
   }
 }
 
-
 void power_button_handler() {
-  static uint8_t  powerOnLck;
-  static uint8_t  pwrBtnPrev;
+  static uint8_t powerOnLck;
+  static uint8_t pwrBtnPrev;
   static uint32_t pwrLongPressCnt;
 
   // Power on with just press
-  if(
-    (HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET)
-    && (pwrBtnPrev == 0)
-  ){
+  if ((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET) &&
+      (pwrBtnPrev == 0)) {
     if (svpSGlobal.lcdState == LCD_OFF) {
-       svp_set_lcd_state(LCD_ON);
-       powerOnLck = 1;
-       svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
-       pwrLongPressCnt = 0;
+      svp_set_lcd_state(LCD_ON);
+      powerOnLck = 1;
+      svpSGlobal.powerMode = SDA_PWR_MODE_NORMAL;
+      pwrLongPressCnt = 0;
     }
   }
 
-   // pwr long press detection
-  if(
-    HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET
-    && svpSGlobal.lcdState == LCD_ON
-  ){
+  // pwr long press detection
+  if (HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_SET &&
+      svpSGlobal.lcdState == LCD_ON) {
     pwrLongPressCnt++;
   }
 
@@ -138,10 +134,8 @@ void power_button_handler() {
     svpSGlobal.systemPwrLongPress = 1;
   }
 
-  if(
-    (HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_RESET) 
-    && (pwrBtnPrev == 1)
-  ){
+  if ((HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN) == GPIO_PIN_RESET) &&
+      (pwrBtnPrev == 1)) {
     if (pwrLongPressCnt > 1500) {
       pwrLongPressCnt = 0;
     } else {
@@ -160,8 +154,7 @@ void power_button_handler() {
   pwrBtnPrev = HAL_GPIO_ReadPin(SDA_BASE_BTN_PWR_PORT, SDA_BASE_BTN_PWR_PIN);
 }
 
-
-void lcd_handler () {
+void lcd_handler() {
   if (Lcd_off_flag > 1) {
     Lcd_off_flag--;
   }
@@ -171,7 +164,7 @@ void lcd_handler () {
     wonder_lcd_sleep();
   }
 
-  if (Lcd_on_flag > 1){
+  if (Lcd_on_flag > 1) {
     Lcd_on_flag--;
   }
 
@@ -184,7 +177,6 @@ void lcd_handler () {
     }
   }
 }
-
 
 int main() {
   __initialize_hardware();
@@ -221,7 +213,7 @@ int main() {
 
   // power status update
   update_power_status();
-  
+
   // Test LCD, init post
   lcd_bw_test();
   postInit();
@@ -231,14 +223,14 @@ int main() {
   if (svpSGlobal.pwrType == POWER_BATT) {
     batt_val = 0;
     postMessage("Measuring battery level.");
-    //measure the initial battery state
+    // measure the initial battery state
     while (batt_val == 0) {
       measureBatteryVoltage();
     }
     // and eventualy halt
     lowBattCheckAndHalt();
   }
-  
+
   postMessage("Hold UP for touch calibration");
   HAL_Delay(1250);
 
@@ -253,24 +245,24 @@ int main() {
   }
 
   if (sda_card_inserted() == 0) {
-      postMessage("SD: Card not found!");
-      postError("Please insert SD Card.");
-  #ifdef PC
-      getchar();
-  #else
-      while(1){
-        if (sda_card_inserted()) {
-          postMessage("SD: Card inserted.");
-          break;
-        }
+    postMessage("SD: Card not found!");
+    postError("Please insert SD Card.");
+#ifdef PC
+    getchar();
+#else
+    while (1) {
+      if (sda_card_inserted()) {
+        postMessage("SD: Card inserted.");
+        break;
       }
-  #endif
+    }
+#endif
   }
 
   // FS mount is performed after the power check, to prevent SD corruption
   uint32_t mountTries = 5;
   postMessage("SD: Mounting FS...");
-  while(1) {
+  while (1) {
     if (svp_mount() == 0) {
       postMessage("SD: Success");
       break;
@@ -278,36 +270,36 @@ int main() {
 
     mountTries--;
 
-    if(mountTries == 0) {
+    if (mountTries == 0) {
       postError("SD: Mount failed");
       postError("Fix card and press reset.");
 
-      while(1);
+      while (1)
+        ;
     }
     postMessage("SD: Mount error, trying again...");
   }
-  
+
   sda_set_led(0);
 
   // LCD config
   sda_conf s;
-  if(HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
+  if (HAL_GPIO_ReadPin(SDA_BASE_BTN_DOWN_PORT, SDA_BASE_BTN_DOWN_PIN) == GPIO_PIN_SET) {
     postMessage("Skipped display config (lcd.cfg).");
   } else {
-    if(sda_conf_open(&s, "lcd.cfg")) {
-      uint8_t invert = (uint8_t)sda_conf_key_read_i32( &s, "invert", 0);
-      uint8_t gamma  = (uint8_t)sda_conf_key_read_i32( &s, "gamma_mode", 0);
+    if (sda_conf_open(&s, "lcd.cfg")) {
+      uint8_t invert = (uint8_t)sda_conf_key_read_i32(&s, "invert", 0);
+      uint8_t gamma = (uint8_t)sda_conf_key_read_i32(&s, "gamma_mode", 0);
 
       printf("Setting LCD params: invert=%u, gamma_mode=%u\n", invert, gamma);
       lcd_set_params(gamma, invert);
       lcd_hw_init();
       sda_conf_close(&s);
-      
+
       postInit();
       postMessage("Display config (lcd.cfg) loaded.");
     }
   }
-  
 
   show_splash();
 
@@ -320,24 +312,22 @@ int main() {
 
   postSuccess("Done, entering main loop.");
 
-  while(1) {
+  while (1) {
     sda_main_loop();
 
     // Sleep mode handling
     svpSGlobal.powerSleepMode = sda_determine_sleep_mode();
 
-    if(svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_STANDBY) {
+    if (svpSGlobal.powerSleepMode == SDA_PWR_MODE_SLEEP_STANDBY) {
       system_clock_set_low();
-    } else if (
-      svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP &&
-      Lcd_off_flag == 0 &&
-      sdaWakeupFlag == 0
-    ) {
+    } else if (svpSGlobal.powerMode == SDA_PWR_MODE_SLEEP && Lcd_off_flag == 0 &&
+               sdaWakeupFlag == 0) {
       tick_lock = SDA_LOCK_LOCKED;
       wonder_enter_sleep();
       // update time
       rtc_update_struct();
-      sda_irq_update_timestruct(rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
+      sda_irq_update_timestruct(
+          rtc.year, rtc.month, rtc.day, rtc.weekday, rtc.hour, rtc.min, rtc.sec);
       // update uptime
       svpSGlobal.uptime = (uint32_t)svpSGlobal.timestamp - uptimeSleepStart;
       svpSGlobal.uptimeMs = svpSGlobal.uptime * 1000;
