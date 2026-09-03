@@ -281,6 +281,8 @@ int main() {
     if(mountTries == 0) {
       postError("SD: Mount failed");
       postError("Fix card and press reset.");
+
+      while(1);
     }
     postMessage("SD: Mount error, trying again...");
   }
