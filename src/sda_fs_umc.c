@@ -377,6 +377,7 @@ uint8_t svp_mount() {
   fr = f_mount(&FatFs, "", 1);
 
   if (fr != FR_OK) {
+    printf("svp_mount: FatFs mount error!\n");
     return 1; // mount error
   } else {
     sd_mounted = 1;
