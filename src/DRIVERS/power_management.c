@@ -89,7 +89,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 
 void lowBattCheckAndHalt() {
-  if (((uint32_t)(get_batt_voltage() * 10) < 31) && (svpSGlobal.pwrType == POWER_BATT) && (batt_val != 0)) {
+  if (((uint32_t)(get_batt_voltage() * 10) < 31) && (svpSGlobal.powerSource == POWER_BATT) && (batt_val != 0)) {
     while(1) {
       tick_lock = SDA_LOCK_LOCKED;
       LCD_Fill(LCD_MixColor(255, 0, 0));
@@ -100,7 +100,7 @@ void lowBattCheckAndHalt() {
       lcd_hw_sleep();
       HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
       update_power_status();
-      if (svpSGlobal.pwrType == POWER_USB) {
+      if (svpSGlobal.powerSource == POWER_USB) {
         HAL_NVIC_SystemReset();
         while(1);
       }
@@ -112,15 +112,15 @@ void lowBattCheckAndHalt() {
 void update_power_status() {
   if (boardRev == REV1) {
     if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_SET) {
-      svpSGlobal.pwrType = POWER_USB;
+      svpSGlobal.powerSource = POWER_USB;
     } else {
-      svpSGlobal.pwrType = POWER_BATT;
+      svpSGlobal.powerSource = POWER_BATT;
     }
   } else {
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_7) == GPIO_PIN_SET) {
-      svpSGlobal.pwrType = POWER_USB;
+      svpSGlobal.powerSource = POWER_USB;
     } else {
-      svpSGlobal.pwrType = POWER_BATT;
+      svpSGlobal.powerSource = POWER_BATT;
     }
   }
 }

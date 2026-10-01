@@ -220,7 +220,7 @@ int main() {
   postMessage("Build: " __DATE__ " " __TIME__);
 
   // if not powered from usb:
-  if (svpSGlobal.pwrType == POWER_BATT) {
+  if (svpSGlobal.powerSource == POWER_BATT) {
     batt_val = 0;
     postMessage("Measuring battery level.");
     // measure the initial battery state

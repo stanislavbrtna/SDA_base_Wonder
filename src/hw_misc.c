@@ -135,7 +135,7 @@ void measureBatteryVoltage() {
   static uint16_t batt_cnt;
   static systemPwrType oldBattState;
 
-  if (oldBattState != svpSGlobal.pwrType && svpSGlobal.pwrType == POWER_BATT) {
+  if (oldBattState != svpSGlobal.powerSource && svpSGlobal.powerSource == POWER_BATT) {
     batt_cnt = 0;
     batt_val = 0;
   }
@@ -164,7 +164,7 @@ void measureBatteryVoltage() {
     batt_cnt = 0;
   }
 
-  oldBattState = svpSGlobal.pwrType;
+  oldBattState = svpSGlobal.powerSource;
 }
 
 void show_splash() {
